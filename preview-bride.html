@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Bride Preview — OLD vs NEW</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { background: #1e1e1e; padding: 24px; font-family: monospace; color: #ccc; margin: 0; }
+    h2   { color: #888; font-size: 11px; letter-spacing: .12em; margin: 0 0 12px; text-transform: uppercase; border-left: 3px solid #555; padding-left: 8px; }
+    .col { display: flex; flex-direction: column; gap: 32px; }
+    .row { display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap; }
+    .cell { text-align: center; }
+    canvas { image-rendering: pixelated; display: block; border: 1px solid #444; }
+    .lbl  { font-size: 10px; color: #666; margin-top: 4px; }
+    .sep  { height: 2px; background: #333; margin: 8px 0 24px; }
+  </style>
+</head>
+<body>
+
+<div class="col">
+  <div id="col-old"></div>
+  <div class="sep"></div>
+  <div id="col-new"></div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// VECCHIO personaggio (invariato)
+// ═══════════════════════════════════════════════════════════════
+function drawBrideOLD(ctx, x, y, surprised, swayAngle) {
+  ctx.save();
+  ctx.translate(x + 9, y + 15);
+  ctx.rotate(swayAngle);
+  ctx.translate(-9, -15);
+
+  ctx.fillStyle = "#F8F8FF";
+  ctx.fillRect(0, 16, 18, 14);
+  ctx.fillRect(-1, 22, 20, 8);
+  ctx.fillStyle = "#DCDCF0";
+  ctx.fillRect(0, 18, 3, 12);
+  ctx.fillRect(15, 18, 3, 12);
+
+  ctx.fillStyle = "#F2F2FA";
+  ctx.fillRect(3, 10, 12, 8);
+  ctx.fillStyle = "#E8E8F5";
+  ctx.fillRect(3, 12, 2, 6);
+
+  // Velo
+  ctx.fillStyle = "rgba(255,255,255,0.80)";
+  ctx.fillRect(-3, 1, 24, 9);
+  ctx.fillRect(-2, 8, 3, 14);
+  ctx.fillRect(17, 8, 3, 14);
+  ctx.fillStyle = "rgba(220,220,240,0.55)";
+  ctx.fillRect(-2, 20, 3, 10);
+  ctx.fillRect(17, 20, 3, 10);
+
+  ctx.fillStyle = "#FFB6C1"; ctx.fillRect(5, 22, 3, 3); ctx.fillRect(11, 26, 3, 3);
+  ctx.fillStyle = "#D4849A"; ctx.fillRect(6, 23, 1, 1); ctx.fillRect(12, 27, 1, 1);
+
+  ctx.fillStyle = "#F4C49C";
+  ctx.fillRect(-2, 12, 5, 5);
+  ctx.fillRect(15, 12, 5, 5);
+
+  ctx.fillStyle = "#FFB6C1"; ctx.fillRect(-3, 16, 5, 5);
+  ctx.fillStyle = "#FF9BAD"; ctx.fillRect(-2, 17, 3, 3);
+  ctx.fillStyle = "#5D8A3C"; ctx.fillRect(-1, 20, 2, 4);
+
+  ctx.fillStyle = "#F4C49C";
+  ctx.beginPath(); ctx.arc(9, 6, 7, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = "#E8B88A"; ctx.fillRect(1, 5, 2, 4);
+
+  ctx.fillStyle = "#5A2D0C";
+  ctx.fillRect(3, 0, 12, 4);
+  ctx.fillRect(2, 2, 3, 7);
+  ctx.fillRect(13, 2, 3, 7);
+
+  ctx.fillStyle = "#1C0E05";
+  if (surprised) {
+    ctx.beginPath(); ctx.arc(6,  6, 2,   0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(12, 6, 2,   0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = "#fff";
+    ctx.beginPath(); ctx.arc(6,  5, 0.8, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(12, 5, 0.8, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = "#8B4513";
+    ctx.beginPath(); ctx.arc(9, 11, 2.5, 0, Math.PI*2); ctx.fill();
+  } else {
+    ctx.fillRect(5, 6, 2, 2); ctx.fillRect(11, 6, 2, 2);
+    ctx.fillStyle = "#8B4513";
+    ctx.fillRect(6, 10, 6, 1); ctx.fillRect(5, 9, 2, 1); ctx.fillRect(11, 9, 2, 1);
+  }
+  ctx.fillStyle = "#5A2D0C";
+  ctx.fillRect(4, 3, 3, 1); ctx.fillRect(11, 3, 3, 1);
+  ctx.restore();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// NUOVO personaggio — capelli scuri lunghi, senza velo
+// ═══════════════════════════════════════════════════════════════
+function drawBrideNEW(ctx, x, y, surprised, swayAngle) {
+  const H  = "#1A0A00";   // capelli scuri
+  const H2 = "#2E1408";   // riflessione/highlight capelli
+
+  ctx.save();
+  ctx.translate(x + 9, y + 15);
+  ctx.rotate(swayAngle);
+  ctx.translate(-9, -15);
+
+  // ── 1. Gonna (A-line, leggermente affusolata) ────────────────
+  ctx.fillStyle = "#F8F8FF";
+  ctx.fillRect(2, 16, 14, 4);   // vita stretta
+  ctx.fillRect(1, 20, 16, 4);   // fianchi
+  ctx.fillRect(0, 24, 18, 4);   // orlo
+  ctx.fillRect(-1, 27, 20, 3);  // bordo piede
+  ctx.fillStyle = "#DCDCF0";    // ombreggiatura laterale
+  ctx.fillRect(2, 17, 2, 12);
+  ctx.fillRect(14, 17, 2, 12);
+  // dettaglio balze
+  ctx.fillStyle = "#F0F0FA";
+  ctx.fillRect(0, 24, 18, 1);
+
+  // ── 2. Corpetto ─────────────────────────────────────────────
+  ctx.fillStyle = "#F2F2FA";
+  ctx.fillRect(3, 10, 12, 7);
+  ctx.fillStyle = "#E8E8F5";
+  ctx.fillRect(3, 12, 2, 5);    // ombra sinistra
+  // scollo a V
+  ctx.fillStyle = "#F8F0EC";
+  ctx.fillRect(6, 10, 6, 3);
+
+  // (fiorellini sul vestito rimossi)
+
+  // ── 3. Braccia ──────────────────────────────────────────────
+  ctx.fillStyle = "#F4C49C";
+  ctx.fillRect(-2, 12, 5, 5);
+  ctx.fillRect(15, 12, 5, 5);
+
+  // Bouquet bianco
+  ctx.fillStyle = "#FFFFFF"; ctx.fillRect(-4, 15, 6, 6);
+  ctx.fillStyle = "#F0F0F0"; ctx.fillRect(-3, 16, 4, 4);
+  ctx.fillStyle = "#E0E0E0"; ctx.fillRect(-2, 17, 2, 2);
+  ctx.fillStyle = "#D4EED4"; ctx.fillRect(-4, 17, 2, 2); // fogliolina verde tenue
+  ctx.fillStyle = "#5D8A3C"; ctx.fillRect(-2, 21, 2, 3); // stelo
+
+  // ── 4. Capelli lunghi −35% (y=2→15, era y=2→23) ────────────
+  ctx.fillStyle = H;
+  // ciocca sinistra
+  ctx.fillRect(0,  2, 4, 5);   // y=2–7  larga alla radice
+  ctx.fillRect(1,  7, 3, 5);   // y=7–12 media
+  ctx.fillRect(1, 12, 2, 3);   // y=12–15 punta affusolata
+  // ciocca destra speculare
+  ctx.fillRect(14,  2, 4, 5);
+  ctx.fillRect(14,  7, 3, 5);
+  ctx.fillRect(15, 12, 2, 3);
+  // riflesso capelli
+  ctx.fillStyle = H2;
+  ctx.fillRect(1, 3, 2, 4);
+  ctx.fillRect(15, 3, 2, 4);
+
+  // ── 5. Testa ────────────────────────────────────────────────
+  ctx.fillStyle = "#F4C49C";
+  ctx.beginPath(); ctx.arc(9, 6, 7, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = "#E8B88A"; ctx.fillRect(1, 5, 2, 4); // orecchio sx
+
+  // ── 6. Capelli sulla testa (sopra al cerchio) ────────────────
+  ctx.fillStyle = H;
+  // volume in cima - segue la curva della testa
+  ctx.fillRect(3, -1, 12, 4);   // corona
+  ctx.fillRect(2,  1, 14, 3);   // più larga al centro
+  // ciuffi laterali che incorniciano il viso
+  ctx.fillRect(1,  2, 3,  7);   // ciuffo sinistro
+  ctx.fillRect(14, 2, 3,  7);   // ciuffo destro
+  // highlight morbido (scriminatura centrale)
+  ctx.fillStyle = H2;
+  ctx.fillRect(6, -1, 6, 2);    // riflesso cima
+  ctx.fillRect(3,  0, 2, 2);
+  ctx.fillRect(13, 0, 2, 2);
+
+  // ── 7. Occhi + sopracciglia ──────────────────────────────────
+  ctx.fillStyle = "#1C0E05";
+  if (surprised) {
+    ctx.beginPath(); ctx.arc(6,  6, 2,   0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(12, 6, 2,   0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = "#fff";
+    ctx.beginPath(); ctx.arc(6,  5, 0.8, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(12, 5, 0.8, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = "#8B4513";
+    ctx.beginPath(); ctx.arc(9, 11, 2.5, 0, Math.PI*2); ctx.fill();
+  } else {
+    ctx.fillRect(5, 6, 2, 2);
+    ctx.fillRect(11, 6, 2, 2);
+    ctx.fillStyle = "#8B4513";
+    ctx.fillRect(6, 10, 6, 1);
+    ctx.fillRect(5, 9, 2, 1); ctx.fillRect(11, 9, 2, 1);
+  }
+  // sopracciglia scure e arcuate
+  ctx.fillStyle = H;
+  ctx.fillRect(4, 3, 4, 1);
+  ctx.fillRect(10, 3, 4, 1);
+
+  ctx.restore();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Renderer generico
+// ═══════════════════════════════════════════════════════════════
+function renderSprite(parentId, title, drawFn, configs) {
+  const col = document.getElementById(parentId);
+
+  const h = document.createElement("h2");
+  h.textContent = title;
+  col.appendChild(h);
+
+  const row = document.createElement("div");
+  row.className = "row";
+
+  configs.forEach(({ label, scale, surprised, sway }) => {
+    const spriteW = 24, spriteH = 36;
+    const pad = 8;
+    const cw  = (spriteW + pad * 2) * scale;
+    const ch  = (spriteH + pad * 2) * scale;
+
+    const cell   = document.createElement("div");
+    cell.className = "cell";
+    const canvas = document.createElement("canvas");
+    canvas.width  = cw;
+    canvas.height = ch;
+    canvas.style.width  = cw + "px";
+    canvas.style.height = ch + "px";
+
+    const ctx = canvas.getContext("2d");
+    ctx.scale(scale, scale);
+
+    // sfondo
+    const sky = ctx.createLinearGradient(0, 0, 0, spriteH + pad*2);
+    sky.addColorStop(0, "#4A8EC2"); sky.addColorStop(1, "#87CEEB");
+    ctx.fillStyle = sky;
+    ctx.fillRect(0, 0, spriteW + pad*2, spriteH + pad*2);
+    ctx.fillStyle = "#5D8A3C";
+    ctx.fillRect(0, spriteH + pad, spriteW + pad*2, pad);
+
+    drawFn(ctx, pad, pad, surprised, sway);
+
+    const lbl = document.createElement("div");
+    lbl.className = "lbl";
+    lbl.textContent = label;
+
+    cell.appendChild(canvas);
+    cell.appendChild(lbl);
+    row.appendChild(cell);
+  });
+
+  col.appendChild(row);
+}
+
+const POSES = [
+  { label: "idle 2×",      scale: 2, surprised: false, sway: 0    },
+  { label: "idle 4×",      scale: 4, surprised: false, sway: 0    },
+  { label: "sway 4×",      scale: 4, surprised: false, sway: 0.08 },
+  { label: "surprised 4×", scale: 4, surprised: true,  sway: 0    },
+  { label: "idle 6×",      scale: 6, surprised: false, sway: 0    },
+];
+
+renderSprite("col-old", "ATTUALE — con velo, capelli corti", drawBrideOLD, POSES);
+renderSprite("col-new", "NUOVA — capelli scuri lunghi, senza velo", drawBrideNEW, POSES);
+</script>
+</body>
+</html>

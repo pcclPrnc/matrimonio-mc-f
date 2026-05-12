@@ -1,0 +1,46 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]       # si attiva ad ogni push su main
+  workflow_dispatch:        # oppure manualmente dal tab "Actions"
+
+permissions:
+  contents: write           # necessario per scrivere sul branch gh-pages
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Scarica il codice
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 2. Configura Node.js con cache npm
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      # 3. Installa dipendenze (usa package-lock.json per riproducibilità)
+      - name: Install dependencies
+        run: npm ci
+
+      # 4. Build — imposta il base path = /nome-del-repo/
+      #    github.event.repository.name è il nome del repo, rilevato in automatico.
+      - name: Build
+        run: npm run build
+        env:
+          VITE_BASE_PATH: /${{ github.event.repository.name }}/
+
+      # 5. Pubblica la cartella dist sul branch gh-pages
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          # Aggiunge un file .nojekyll per evitare che GitHub
+          # ignori le cartelle che iniziano con underscore
+          enable_jekyll: false

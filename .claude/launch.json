@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "bride-preview",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["serve", "-p", "5747", "--no-clipboard", "."],
+      "port": 5747
+    }
+  ]
+}
