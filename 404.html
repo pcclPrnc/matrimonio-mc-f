@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <title>Maria Cristina &amp; Flavio — 2 Ottobre 2026</title>
+  <script>
+    /**
+     * Single Page Apps for GitHub Pages — routing fix.
+     * Quando GitHub Pages restituisce 404 (URL non root),
+     * questo script reindirizza a index.html preservando il percorso.
+     *
+     * pathSegmentsToKeep = 1  →  mantiene /nome-repo/ come prefisso
+     * https://github.com/rafgraph/spa-github-pages
+     */
+    var pathSegmentsToKeep = 1;
+    var l = window.location;
+    l.replace(
+      l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
+      l.pathname.split('/').slice(0, 1 + pathSegmentsToKeep).join('/') + '/?/' +
+      l.pathname.slice(1).split('/').slice(pathSegmentsToKeep).join('/').replace(/&/g, '~and~') +
+      (l.search ? '&' + l.search.slice(1).replace(/&/g, '~and~') : '') +
+      l.hash
+    );
+  </script>
+</head>
+<body></body>
+</html>
