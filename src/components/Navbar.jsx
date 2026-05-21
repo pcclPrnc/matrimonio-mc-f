@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { Link, useLocation } from "react-router-dom";
 import { COLORS, FONTS } from "../designSystem";
 import { useSite } from "../context/SiteContext";
@@ -33,6 +34,7 @@ export default function Navbar() {
     .map(label => ({ label, to: ROUTE_MAP[label] ?? "/" }));
 
   return (
+    <>
     <nav style={{
       position: "fixed", top: 0, left: 0, right: 0, zIndex: 100,
       background: scrolled ? C.cream + "F2" : "transparent",
@@ -72,30 +74,34 @@ export default function Navbar() {
       </div>
       <div style={{ width: 200 }} className="wc-dn" />
 
-      {/* Mobile overlay menu */}
-      {menuOpen && (
-        <div style={{
-          position: "fixed", inset: 0, background: C.cream + "F8", zIndex: 200,
-          display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 36,
-        }}>
-          <button
-            onClick={() => setMenuOpen(false)}
-            style={{ position: "absolute", top: 22, right: 32, background: "none", border: "none", fontSize: 36, cursor: "pointer", color: C.olive, lineHeight: 1 }}
-          >
-            ×
-          </button>
-          {navLinks.map(({ label, to }) => (
-            <Link
-              key={label}
-              to={to}
-              onClick={() => setMenuOpen(false)}
-              style={{ fontFamily: FONTS.script, fontSize: 32, color: C.olive, textDecoration: "none" }}
-            >
-              {label}
-            </Link>
-          ))}
-        </div>
-      )}
     </nav>
+
+    {/* Mobile overlay — rendered in document.body via Portal to avoid
+        backdropFilter creating a new containing block for position:fixed */}
+    {menuOpen && createPortal(
+      <div style={{
+        position: "fixed", inset: 0, background: C.cream + "F8", zIndex: 9999,
+        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 36,
+      }}>
+        <button
+          onClick={() => setMenuOpen(false)}
+          style={{ position: "absolute", top: 22, right: 32, background: "none", border: "none", fontSize: 36, cursor: "pointer", color: C.olive, lineHeight: 1 }}
+        >
+          ×
+        </button>
+        {navLinks.map(({ label, to }) => (
+          <Link
+            key={label}
+            to={to}
+            onClick={() => setMenuOpen(false)}
+            style={{ fontFamily: FONTS.script, fontSize: 32, color: C.olive, textDecoration: "none" }}
+          >
+            {label}
+          </Link>
+        ))}
+      </div>,
+      document.body
+    )}
+    </>
   );
 }
