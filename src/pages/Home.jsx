@@ -15,13 +15,14 @@ export default function Home() {
   /* Graphics visibility from context */
   const g = siteData.graphics?.home ?? {};
 
-  /* Persistent media managed via Admin (base64 in localStorage) */
-  const [coupleUrl] = useState(() => localStorage.getItem("media_home_couple") || null);
-  const [heroBgUrl] = useState(() => localStorage.getItem("media_home_herobg") || null);
-  const [pageBgUrl] = useState(() => localStorage.getItem("media_home_pagebg") || null);
+  /* Media from Firebase (or localStorage fallback) via context */
+  const media = siteData.media ?? {};
+  const coupleUrl = media.home_couple || localStorage.getItem("media_home_couple") || null;
+  const heroBgUrl = media.home_herobg || localStorage.getItem("media_home_herobg") || null;
+  const pageBgUrl = media.home_pagebg || localStorage.getItem("media_home_pagebg") || null;
 
-  /* SVG replacement images (uploaded via Admin → Foto & Grafica) */
-  const gfx = key => ({ url: localStorage.getItem(`graphic_home_${key}`) || null });
+  /* SVG replacement images via context */
+  const gfx = key => ({ url: media[`graphic_home_${key}`] || localStorage.getItem(`graphic_home_${key}`) || null });
 
   /* Countdown */
   const [t, setT] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });

@@ -1,7 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import { COLORS, FONTS, useUpload } from "../designSystem.jsx";
+import { COLORS, FONTS } from "../designSystem.jsx";
 import { useSite } from "../context/SiteContext";
+import { db, CONFIGURED } from "../firebase";
+import { ref, push } from "firebase/database";
+import { uploadMedia, isGithubConfigured } from "../services/githubApi";
 
 /* ═══════════════════════════════════════════════════════════
    CONSTANTS
@@ -218,7 +221,7 @@ const inputBase = (C, hasError) => ({
    MAIN PAGE
    ═══════════════════════════════════════════════════════════ */
 export default function RSVP() {
-  const { siteData } = useSite();
+  const { siteData, updateMedia } = useSite();
   const C = COLORS;
 
   /* Form state — restored from sessionStorage on mount */
@@ -239,7 +242,37 @@ export default function RSVP() {
   /* Prevents double-write to localStorage when user retries after webhook failure */
   const localSavedRef = useRef(false);
 
-  const heroPhotoUp = useUpload();
+  /* Hero circle photo — wired to Firebase Storage */
+  const heroPhotoRef = useRef();
+  const heroPhotoUrl = siteData.media?.rsvp_hero || localStorage.getItem("media_rsvp_hero") || null;
+  const heroPhotoUp = {
+    url: heroPhotoUrl,
+    has: !!heroPhotoUrl,
+    trigger: () => heroPhotoRef.current?.click(),
+    inp: (
+      <input ref={heroPhotoRef} type="file" accept="image/*" style={{ display: "none" }}
+        onChange={async e => {
+          const file = e.target.files?.[0]; if (!file) return; e.target.value = "";
+          try {
+            if (isGithubConfigured()) {
+              const url = await uploadMedia("rsvp_hero", file);
+              updateMedia("rsvp_hero", url);
+            } else {
+              await new Promise(resolve => {
+                const reader = new FileReader();
+                reader.onload = ev => {
+                  try { localStorage.setItem("media_rsvp_hero", ev.target.result); } catch {}
+                  updateMedia("rsvp_hero", ev.target.result);
+                  resolve();
+                };
+                reader.readAsDataURL(file);
+              });
+            }
+          } catch {}
+        }}
+      />
+    ),
+  };
 
   /* Refs for scroll-to-error */
   const nomeRef     = useRef(null);
@@ -325,7 +358,7 @@ export default function RSVP() {
     };
 
     /* ── Google Sheets webhook ── */
-    const webhookUrl = (localStorage.getItem("admin_webhook") || "").trim();
+    const webhookUrl = (siteData.webhookUrl || localStorage.getItem("admin_webhook") || "").trim();
 
     if (webhookUrl) {
       try {
@@ -357,7 +390,10 @@ export default function RSVP() {
       }
     }
 
-    /* ── Save to localStorage (always on success path) ── */
+    /* ── Save to Firebase and localStorage ── */
+    if (CONFIGURED) {
+      try { await push(ref(db, "rsvpResponses"), entry); } catch {}
+    }
     try {
       const prev = JSON.parse(localStorage.getItem("rsvp_risposte") || "[]");
       localStorage.setItem("rsvp_risposte", JSON.stringify([...prev, entry]));

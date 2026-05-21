@@ -1,7 +1,40 @@
 import { useState, useRef, useEffect } from "react";
-import { COLORS, FONTS, useUpload } from "../designSystem.jsx";
+import { COLORS, FONTS } from "../designSystem.jsx";
 import PhotoSlot from "../components/PhotoSlot";
 import { useSite } from "../context/SiteContext";
+import { uploadMedia, isGithubConfigured } from "../services/githubApi";
+
+function useContextUpload(storageKey) {
+  const { siteData, updateMedia } = useSite();
+  const fileRef = useRef();
+  const url = siteData.media?.[storageKey] || localStorage.getItem(`media_${storageKey}`) || null;
+  const trigger = () => fileRef.current?.click();
+  const clear = () => updateMedia(storageKey, null);
+
+  const onChange = async e => {
+    const file = e.target.files?.[0]; if (!file) return;
+    e.target.value = "";
+    try {
+      if (isGithubConfigured()) {
+        const dlUrl = await uploadMedia(storageKey, file);
+        updateMedia(storageKey, dlUrl);
+      } else {
+        await new Promise(resolve => {
+          const reader = new FileReader();
+          reader.onload = ev => {
+            try { localStorage.setItem(`media_${storageKey}`, ev.target.result); } catch {}
+            updateMedia(storageKey, ev.target.result);
+            resolve();
+          };
+          reader.readAsDataURL(file);
+        });
+      }
+    } catch {}
+  };
+
+  const inp = <input ref={fileRef} type="file" accept="image/*" style={{ display: "none" }} onChange={onChange} />;
+  return { url, trigger, clear, inp, has: !!url };
+}
 
 /* ── Chevron arrow SVG ──────────────────────────────────── */
 function ChevronIcon({ color = "#3D5A3E", open }) {
@@ -127,7 +160,7 @@ export default function FAQ() {
 
   const faqItems = siteData.faqItems ?? [];
   const [openIndex, setOpenIndex] = useState(0);
-  const polaroidUp = useUpload();
+  const polaroidUp = useContextUpload("faq_side");
 
   /* Interpolate {token} placeholders with siteData values */
   const interpolate = (text) =>

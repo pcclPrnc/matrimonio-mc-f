@@ -1,13 +1,14 @@
-import { createContext, useContext } from "react";
-import { useLocalStorage } from "../hooks/useLocalStorage";
+import { createContext, useContext, useState, useEffect, useCallback } from "react";
+import { ref, onValue, update, set } from "firebase/database";
+import { db, CONFIGURED } from "../firebase";
 
-/* ── Default palette (mirrors designSystem.js COLORS) ────── */
+/* ── Default palette ─────────────────────────────────────── */
 const DEFAULT_PALETTE = {
   cream: "#F5F0E8", olive: "#3D5A3E", gold: "#C9A84C",
   rose:  "#D4849A", dark:  "#1C1C1C", card: "#FAF7F0",
 };
 
-/* ── Default graphics visibility per page ─────────────────── */
+/* ── Default graphics visibility ─────────────────────────── */
 const DEFAULT_GRAPHICS = {
   home: {
     olSx:      { vis: true }, olDx:       { vis: true },
@@ -39,13 +40,13 @@ const DEFAULT_GRAPHICS = {
   },
 };
 
-/* ── Menu visibility (all visible by default) ─────────────── */
+/* ── Menu visibility ─────────────────────────────────────── */
 const DEFAULT_MENU_VIS = {
   "Home": true, "Programma": true, "RSVP": true,
   "FAQ": true,  "Non posso aspettare": true, "Admin": false,
 };
 
-/* ── Site-wide defaults ───────────────────────────────────── */
+/* ── Site-wide defaults ──────────────────────────────────── */
 const SITE_DEFAULTS = {
   nomi:               "Maria Cristina & Flavio",
   data:               "2 Ottobre 2026",
@@ -57,6 +58,7 @@ const SITE_DEFAULTS = {
   luogoRicevimento:   "Casale Campovecchio",
   indirizzoRicevimento:"Via di Campo Vecchio 16, Grottaferrata",
   mapsRicevimento:    "https://maps.google.com/?q=Via+di+Campo+Vecchio+16+Grottaferrata",
+  webhookUrl:         "",
   ordineMenu: ["Home", "Programma", "RSVP", "FAQ", "Non posso aspettare"],
   menuVisibility: DEFAULT_MENU_VIS,
   programmaEventi: [
@@ -87,33 +89,120 @@ const SITE_DEFAULTS = {
   ],
   palette:  DEFAULT_PALETTE,
   graphics: DEFAULT_GRAPHICS,
+  media:    {},
 };
 
 export { SITE_DEFAULTS };
 
+/* ── Deep merge: overlay Firebase data onto defaults ─────── */
+function deepMerge(defaults, overrides) {
+  if (!overrides || typeof overrides !== "object") return defaults;
+  const out = { ...defaults };
+  for (const k of Object.keys(overrides)) {
+    if (
+      overrides[k] !== null &&
+      typeof overrides[k] === "object" &&
+      !Array.isArray(overrides[k]) &&
+      typeof defaults[k] === "object" &&
+      defaults[k] !== null &&
+      !Array.isArray(defaults[k])
+    ) {
+      out[k] = deepMerge(defaults[k], overrides[k]);
+    } else {
+      out[k] = overrides[k];
+    }
+  }
+  return out;
+}
+
+/* ── localStorage fallback helpers ──────────────────────── */
+const LS_KEY = "wc_site_data";
+function lsLoad() {
+  try { const s = localStorage.getItem(LS_KEY); return s ? JSON.parse(s) : null; } catch { return null; }
+}
+function lsSave(data) {
+  try { localStorage.setItem(LS_KEY, JSON.stringify(data)); } catch {}
+}
+
 const SiteContext = createContext(null);
 
 export function SiteProvider({ children }) {
-  const [siteData, setSiteData] = useLocalStorage("wc_site_data", SITE_DEFAULTS);
+  const [siteData, setSiteDataRaw] = useState(() => {
+    const cached = lsLoad();
+    return cached ? deepMerge(SITE_DEFAULTS, cached) : { ...SITE_DEFAULTS };
+  });
+  const [firebaseReady, setFirebaseReady] = useState(!CONFIGURED);
 
-  const updateSite = (key, value) =>
-    setSiteData(prev => ({ ...prev, [key]: value }));
+  /* ── Subscribe to Firebase on mount ─────────────────────── */
+  useEffect(() => {
+    if (!CONFIGURED) return;
+    const unsubscribe = onValue(ref(db, "siteData"), (snap) => {
+      const remote = snap.val();
+      const merged = remote ? deepMerge(SITE_DEFAULTS, remote) : { ...SITE_DEFAULTS };
+      setSiteDataRaw(merged);
+      lsSave(merged);
+      setFirebaseReady(true);
+    }, (err) => {
+      console.warn("Firebase read error, using cache:", err.message);
+      setFirebaseReady(true);
+    });
+    return unsubscribe;
+  }, []);
 
-  /** Update a single graphics visibility entry */
-  const updateGraphic = (page, key, patch) =>
-    setSiteData(prev => ({
-      ...prev,
-      graphics: {
-        ...prev.graphics,
-        [page]: {
-          ...prev.graphics?.[page],
-          [key]: { ...(prev.graphics?.[page]?.[key] ?? { vis: true }), ...patch },
+  /* ── Write helpers ───────────────────────────────────────── */
+  const updateSite = useCallback((key, value) => {
+    setSiteDataRaw(prev => {
+      const next = { ...prev, [key]: value };
+      lsSave(next);
+      if (CONFIGURED) update(ref(db, "siteData"), { [key]: value });
+      return next;
+    });
+  }, []);
+
+  const updateGraphic = useCallback((page, key, patch) => {
+    setSiteDataRaw(prev => {
+      const next = {
+        ...prev,
+        graphics: {
+          ...prev.graphics,
+          [page]: {
+            ...prev.graphics?.[page],
+            [key]: { ...(prev.graphics?.[page]?.[key] ?? { vis: true }), ...patch },
+          },
         },
-      },
-    }));
+      };
+      lsSave(next);
+      if (CONFIGURED) {
+        update(ref(db, `siteData/graphics/${page}`), {
+          [key]: { ...(prev.graphics?.[page]?.[key] ?? { vis: true }), ...patch },
+        });
+      }
+      return next;
+    });
+  }, []);
+
+  const updateMedia = useCallback((storageKey, url) => {
+    setSiteDataRaw(prev => {
+      const next = { ...prev, media: { ...prev.media, [storageKey]: url } };
+      lsSave(next);
+      if (CONFIGURED) update(ref(db, "siteData/media"), { [storageKey]: url });
+      return next;
+    });
+  }, []);
+
+  const setSiteData = useCallback((updater) => {
+    setSiteDataRaw(prev => {
+      const next = typeof updater === "function" ? updater(prev) : updater;
+      lsSave(next);
+      if (CONFIGURED) set(ref(db, "siteData"), next);
+      return next;
+    });
+  }, []);
 
   return (
-    <SiteContext.Provider value={{ siteData, setSiteData, updateSite, updateGraphic }}>
+    <SiteContext.Provider value={{
+      siteData, setSiteData, updateSite, updateGraphic, updateMedia, firebaseReady,
+    }}>
       {children}
     </SiteContext.Provider>
   );

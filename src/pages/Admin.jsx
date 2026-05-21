@@ -4,6 +4,10 @@ import {
 } from "../designSystem.jsx";
 import { useSite } from "../context/SiteContext";
 import { SITE_DEFAULTS } from "../context/SiteContext";
+import { db, auth, CONFIGURED } from "../firebase";
+import { ref, onValue } from "firebase/database";
+import { signInAnonymously, signOut } from "firebase/auth";
+import { uploadMedia, deleteMedia, isGithubConfigured } from "../services/githubApi";
 
 /* ═══════════════════════════════════════════════════════════
    ADMIN DESIGN TOKENS  (no wedding fonts/colors)
@@ -153,27 +157,50 @@ function DraggableList({ items, onReorder, renderRow }) {
 }
 
 /* ═══════════════════════════════════════════════════════════
-   PHOTO UPLOAD SLOT (base64 → localStorage)
+   PHOTO UPLOAD SLOT (Firebase Storage or base64 fallback)
    Optional visibility toggle via siteData.graphics
    ═══════════════════════════════════════════════════════════ */
 function PhotoSlotAdmin({ label: lbl, storageKey, page, itemKey, siteData, updateGraphic }) {
-  const [url, setUrl] = useState(() => {
-    try { return localStorage.getItem(`media_${storageKey}`) || null; } catch { return null; }
-  });
-  const ref = useRef();
+  const { updateMedia } = useSite();
+  const [uploading, setUploading] = useState(false);
+  const url = siteData?.media?.[storageKey] || null;
+  const fileRef = useRef();
 
-  const handleFile = e => {
+  const handleFile = async e => {
     const file = e.target.files?.[0]; if (!file) return;
-    const reader = new FileReader();
-    reader.onload = ev => {
-      try { localStorage.setItem(`media_${storageKey}`, ev.target.result); } catch { alert("Storage pieno: immagine troppo grande."); return; }
-      setUrl(ev.target.result);
-    };
-    reader.readAsDataURL(file);
     e.target.value = "";
+    setUploading(true);
+    try {
+      if (isGithubConfigured()) {
+        const dlUrl = await uploadMedia(storageKey, file);
+        updateMedia(storageKey, dlUrl);
+      } else {
+        /* Fallback: base64 in localStorage when GitHub not configured */
+        await new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onload = ev => {
+            try { localStorage.setItem(`media_${storageKey}`, ev.target.result); } catch { alert("Storage pieno: immagine troppo grande."); }
+            updateMedia(storageKey, ev.target.result);
+            resolve();
+          };
+          reader.readAsDataURL(file);
+        });
+      }
+    } catch (err) {
+      alert("Errore upload: " + err.message);
+    } finally {
+      setUploading(false);
+    }
   };
 
-  const remove = () => { localStorage.removeItem(`media_${storageKey}`); setUrl(null); };
+  const remove = async () => {
+    if (isGithubConfigured()) {
+      try { await deleteMedia(storageKey); } catch {}
+    } else {
+      localStorage.removeItem(`media_${storageKey}`);
+    }
+    updateMedia(storageKey, null);
+  };
 
   /* Optional visibility toggle */
   const hasVis = page && itemKey && siteData && updateGraphic;
@@ -181,16 +208,17 @@ function PhotoSlotAdmin({ label: lbl, storageKey, page, itemKey, siteData, updat
 
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "8px 0", borderBottom: `1px solid ${A.border}` }}>
-      <input ref={ref} type="file" accept="image/*" style={{ display: "none" }} onChange={handleFile} />
+      <input ref={fileRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleFile} />
       <div style={{ width: 60, height: 60, borderRadius: 4, overflow: "hidden", background: "#F3F4F6", border: `1px solid ${A.border}`, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
         {url ? <img src={url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <span style={{ fontSize: 22, opacity: .4 }}>📷</span>}
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <p style={{ fontFamily: A.ff, fontSize: 13, fontWeight: 500, color: hasVis && visEntry?.vis === false ? A.muted : A.text, marginBottom: 2, textDecoration: hasVis && visEntry?.vis === false ? "line-through" : "none" }}>{lbl}</p>
-        {url && <p style={{ fontFamily: A.ff, fontSize: 11, color: A.success }}>✓ Immagine caricata</p>}
+        {uploading && <p style={{ fontFamily: A.ff, fontSize: 11, color: A.warn }}>⏳ Caricamento…</p>}
+        {!uploading && url && <p style={{ fontFamily: A.ff, fontSize: 11, color: A.success }}>✓ Immagine caricata</p>}
       </div>
       <div style={{ display: "flex", gap: 6, alignItems: "center", flexShrink: 0 }}>
-        <button onClick={() => ref.current?.click()} style={btn("outline", { fontSize: 11 })}>{url ? "Cambia" : "Carica"}</button>
+        <button onClick={() => fileRef.current?.click()} disabled={uploading} style={btn("outline", { fontSize: 11 })}>{url ? "Cambia" : "Carica"}</button>
         {url && <button onClick={remove} style={btn("danger", { fontSize: 11 })}>Rimuovi</button>}
         {hasVis && (
           <AToggle
@@ -207,33 +235,48 @@ function PhotoSlotAdmin({ label: lbl, storageKey, page, itemKey, siteData, updat
    SVG VISIBILITY ROW
    ═══════════════════════════════════════════════════════════ */
 function SvgVisRow({ label: lbl, page, itemKey, previewEl, siteData, updateGraphic }) {
+  const { updateMedia } = useSite();
   const entry = siteData.graphics?.[page]?.[itemKey] ?? { vis: true };
-  const [customUrl, setCustomUrl] = useState(() => {
-    try { return localStorage.getItem(`graphic_${page}_${itemKey}`) || null; } catch { return null; }
-  });
-  const ref = useRef();
+  const svgKey = `graphic_${page}_${itemKey}`;
+  const customUrl = siteData.media?.[svgKey] || null;
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef();
 
-  const handleFile = e => {
+  const handleFile = async e => {
     const file = e.target.files?.[0]; if (!file) return;
-    const reader = new FileReader();
-    reader.onload = ev => {
-      try { localStorage.setItem(`graphic_${page}_${itemKey}`, ev.target.result); } catch { alert("Storage pieno."); return; }
-      setCustomUrl(ev.target.result);
-      updateGraphic(page, itemKey, { hasCustom: true });
-    };
-    reader.readAsDataURL(file);
     e.target.value = "";
+    setUploading(true);
+    try {
+      if (isGithubConfigured()) {
+        const url = await uploadMedia(svgKey, file);
+        updateMedia(svgKey, url);
+      } else {
+        await new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onload = ev => {
+            try { localStorage.setItem(svgKey, ev.target.result); } catch { alert("Storage pieno."); }
+            updateMedia(svgKey, ev.target.result);
+            resolve();
+          };
+          reader.readAsDataURL(file);
+        });
+      }
+      updateGraphic(page, itemKey, { hasCustom: true });
+    } catch (err) { alert("Errore upload: " + err.message); }
+    finally { setUploading(false); }
   };
 
-  const restore = () => {
-    localStorage.removeItem(`graphic_${page}_${itemKey}`);
-    setCustomUrl(null);
+  const restore = async () => {
+    if (isGithubConfigured()) {
+      try { await deleteMedia(svgKey); } catch {}
+    } else { localStorage.removeItem(svgKey); }
+    updateMedia(svgKey, null);
     updateGraphic(page, itemKey, { hasCustom: false });
   };
 
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderBottom: `1px solid ${A.border}` }}>
-      <input ref={ref} type="file" accept="image/*" style={{ display: "none" }} onChange={handleFile} />
+      <input ref={fileRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleFile} />
       {/* Preview */}
       <div style={{ width: 44, height: 44, flexShrink: 0, borderRadius: 4, background: "#F5F0E8", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
         {customUrl
@@ -243,7 +286,7 @@ function SvgVisRow({ label: lbl, page, itemKey, previewEl, siteData, updateGraph
       </div>
       <span style={{ flex: 1, fontFamily: A.ff, fontSize: 13, color: entry.vis ? A.text : A.muted, textDecoration: entry.vis ? "none" : "line-through" }}>{lbl}</span>
       <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-        <button onClick={() => ref.current?.click()} style={btn("outline", { fontSize: 11 })}>Sostituisci</button>
+        <button onClick={() => fileRef.current?.click()} disabled={uploading} style={btn("outline", { fontSize: 11 })}>{uploading ? "⏳" : "Sostituisci"}</button>
         {customUrl && <button onClick={restore} style={btn("ghost", { fontSize: 11 })}>↺ Orig</button>}
         <AToggle on={entry.vis} onChange={v => updateGraphic(page, itemKey, { vis: v })} />
       </div>
@@ -477,8 +520,22 @@ function SecRSVP() {
     try { return JSON.parse(localStorage.getItem("rsvp_risposte") || "[]"); } catch { return []; }
   });
 
+  /* Subscribe to Firebase Realtime DB for RSVP responses */
+  useEffect(() => {
+    if (!CONFIGURED) return;
+    const unsubscribe = onValue(ref(db, "rsvpResponses"), snap => {
+      const val = snap.val();
+      if (!val) return;
+      const arr = Object.values(val).sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+      setRisposte(arr);
+    });
+    return unsubscribe;
+  }, []);
+
   const refresh = () => {
-    try { setRisposte(JSON.parse(localStorage.getItem("rsvp_risposte") || "[]")); } catch {}
+    if (!CONFIGURED) {
+      try { setRisposte(JSON.parse(localStorage.getItem("rsvp_risposte") || "[]")); } catch {}
+    }
   };
 
   const presenti = risposte.filter(r => r.presenza === true).length;
@@ -506,9 +563,8 @@ function SecRSVP() {
 
   return (
     <AdminSectionCard title="📋 Risposte RSVP">
-      {/* TODO badge */}
-      <div style={{ background: "#FFF8E6", border: "1px solid #F59E0B44", borderRadius: 4, padding: "8px 12px", marginBottom: 14, fontFamily: A.ff, fontSize: 12, color: "#92400E" }}>
-        🔧 Integrazione Google Sheets — configura il webhook nelle Impostazioni
+      <div style={{ background: A.accentLight, border: `1px solid ${A.accent}44`, borderRadius: 4, padding: "8px 12px", marginBottom: 14, fontFamily: A.ff, fontSize: 12, color: A.accent }}>
+        {CONFIGURED ? "✓ Firebase attivo — le risposte RSVP sono salvate nel database condiviso." : "🔧 Firebase non configurato — le risposte sono salvate solo in questo browser."}
       </div>
       {/* Counters */}
       <div style={{ display: "flex", gap: 12, marginBottom: 20, flexWrap: "wrap" }}>
@@ -709,13 +765,32 @@ function SecMenu({ siteData, updateSite }) {
    SECTION 7 — IMPOSTAZIONI
    ═══════════════════════════════════════════════════════════ */
 function SecImpostazioni({ siteData, updateSite }) {
-  const [webhook, setWebhook]   = useState(() => localStorage.getItem("admin_webhook") || "");
+  const [webhook, setWebhook]   = useState(siteData.webhookUrl || "");
+  const [webhookSaved, setWebhookSaved] = useState(false);
   const [newPwd, setNewPwd]     = useState("");
   const [pwdMsg, setPwdMsg]     = useState("");
   const [palette, setPalette]   = useState({ ...siteData.palette });
   const [palSaved, setPalSaved] = useState(false);
 
-  const saveWebhook = () => { localStorage.setItem("admin_webhook", webhook); alert("Webhook salvato!"); };
+  /* GitHub credentials (stored in localStorage, admin-device only) */
+  const [ghPat,    setGhPat]    = useState(() => localStorage.getItem("github_pat")    || "");
+  const [ghOwner,  setGhOwner]  = useState(() => localStorage.getItem("github_owner")  || "");
+  const [ghRepo,   setGhRepo]   = useState(() => localStorage.getItem("github_repo")   || "");
+  const [ghBranch, setGhBranch] = useState(() => localStorage.getItem("github_branch") || "main");
+  const [ghSaved,  setGhSaved]  = useState(false);
+
+  const saveGithub = () => {
+    localStorage.setItem("github_pat",    ghPat.trim());
+    localStorage.setItem("github_owner",  ghOwner.trim());
+    localStorage.setItem("github_repo",   ghRepo.trim());
+    localStorage.setItem("github_branch", ghBranch.trim() || "main");
+    setGhSaved(true); setTimeout(() => setGhSaved(false), 2000);
+  };
+
+  const saveWebhook = () => {
+    updateSite("webhookUrl", webhook);
+    setWebhookSaved(true); setTimeout(() => setWebhookSaved(false), 2000);
+  };
 
   const changePwd = () => {
     if (newPwd.length < 6) { setPwdMsg("Minimo 6 caratteri"); return; }
@@ -729,7 +804,8 @@ function SecImpostazioni({ siteData, updateSite }) {
     if (!c1) return;
     const c2 = window.confirm("Ultima conferma: questa azione è IRREVERSIBILE. Continuare?");
     if (!c2) return;
-    ["wc_site_data","rsvp_risposte","admin_webhook"].forEach(k => localStorage.removeItem(k));
+    localStorage.removeItem("wc_site_data");
+    localStorage.removeItem("rsvp_risposte");
     window.location.reload();
   };
 
@@ -743,13 +819,45 @@ function SecImpostazioni({ siteData, updateSite }) {
 
   return (
     <>
+      {/* GitHub foto upload */}
+      <AdminSectionCard title="📁 Upload Foto via GitHub">
+        <p style={{ fontFamily: A.ff, fontSize: 12, color: A.muted, marginBottom: 12 }}>
+          Le foto vengono caricate direttamente nel repository GitHub e appaiono su tutti i dispositivi senza attendere il deploy.
+          Il token viene salvato solo su questo browser.
+        </p>
+        <div style={{ background: A.accentLight, borderRadius: 4, padding: "8px 12px", marginBottom: 14, fontFamily: A.ff, fontSize: 12, color: A.accent }}>
+          {isGithubConfigured() ? "✓ GitHub configurato — upload foto attivo." : "⚠ GitHub non configurato — le foto sono salvate solo in questo browser."}
+        </div>
+        <AField label="GitHub Personal Access Token" hint="Crea un token con permesso 'Contents: Read & Write' su github.com/settings/tokens">
+          <AInput value={ghPat} onChange={e => setGhPat(e.target.value)} type="password" placeholder="ghp_..." />
+        </AField>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+          <AField label="Owner (utente/org)">
+            <AInput value={ghOwner} onChange={e => setGhOwner(e.target.value)} placeholder="tuo-username" />
+          </AField>
+          <AField label="Nome repository">
+            <AInput value={ghRepo} onChange={e => setGhRepo(e.target.value)} placeholder="wedding-mc-flavio" />
+          </AField>
+        </div>
+        <AField label="Branch">
+          <AInput value={ghBranch} onChange={e => setGhBranch(e.target.value)} placeholder="main" />
+        </AField>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <button onClick={saveGithub} style={btn("primary")}>Salva credenziali</button>
+          {ghSaved && <span style={{ fontFamily: A.ff, fontSize: 12, color: A.success }}>✓ Salvato</span>}
+        </div>
+      </AdminSectionCard>
+
       {/* Google Sheets */}
       <AdminSectionCard title="🔧 Integrazione Google Sheets">
         <p style={{ fontFamily: A.ff, fontSize: 12, color: A.muted, marginBottom: 12 }}>Inserisci l'URL del webhook (Google Apps Script) per inviare le risposte RSVP al foglio di calcolo.</p>
         <AField label="URL Webhook">
           <AInput value={webhook} onChange={e => setWebhook(e.target.value)} placeholder="https://script.google.com/macros/s/..." />
         </AField>
-        <button onClick={saveWebhook} style={btn("primary")}>Salva Webhook</button>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <button onClick={saveWebhook} style={btn("primary")}>Salva Webhook</button>
+          {webhookSaved && <span style={{ fontFamily: A.ff, fontSize: 12, color: A.success }}>✓ Salvato</span>}
+        </div>
       </AdminSectionCard>
 
       {/* Palette colori */}
@@ -798,10 +906,13 @@ function LoginForm({ onLogin }) {
   const [pwd,  setPwd]  = useState("");
   const [err,  setErr]  = useState("");
 
-  const submit = e => {
+  const submit = async e => {
     e.preventDefault();
     const storedPwd = localStorage.getItem("admin_pwd") || ADMIN_CREDS.pwd;
     if (user === ADMIN_CREDS.user && pwd === storedPwd) {
+      if (CONFIGURED) {
+        try { await signInAnonymously(auth); } catch { /* proceed anyway */ }
+      }
       sessionStorage.setItem("admin_auth", "1");
       onLogin();
     } else {
@@ -913,7 +1024,11 @@ function Dashboard({ onLogout }) {
 export default function Admin() {
   const [authed, setAuthed] = useState(() => sessionStorage.getItem("admin_auth") === "1");
 
-  const logout = () => { sessionStorage.removeItem("admin_auth"); setAuthed(false); };
+  const logout = () => {
+    sessionStorage.removeItem("admin_auth");
+    if (CONFIGURED) signOut(auth).catch(() => {});
+    setAuthed(false);
+  };
 
   if (!authed) return <LoginForm onLogin={() => setAuthed(true)} />;
   return <Dashboard onLogout={logout} />;

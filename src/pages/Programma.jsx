@@ -2,9 +2,9 @@ import { useState, useEffect, useRef } from "react";
 import {
   COLORS, FONTS,
   Church, Cocktail, Cake, Moon, HeartSVG,
-  useUpload,
 } from "../designSystem.jsx";
 import { useSite } from "../context/SiteContext";
+import { uploadMedia, isGithubConfigured } from "../services/githubApi";
 
 /* ── Page-specific SVG icons ────────────────────────────── */
 const ForkPlate = ({ color = "#1C1C1C" }) => (
@@ -98,6 +98,39 @@ function VineBerry({ color }) {
 }
 
 /* ── Main Page ───────────────────────────────────────────── */
+/* ── Inline upload hook wired to Firebase/context ─────────── */
+function useContextUpload(storageKey) {
+  const { siteData, updateMedia } = useSite();
+  const fileRef = useRef();
+  const url = siteData.media?.[storageKey] || localStorage.getItem(`media_${storageKey}`) || null;
+
+  const trigger = () => fileRef.current?.click();
+
+  const onChange = async e => {
+    const file = e.target.files?.[0]; if (!file) return;
+    e.target.value = "";
+    try {
+      if (isGithubConfigured()) {
+        const dlUrl = await uploadMedia(storageKey, file);
+        updateMedia(storageKey, dlUrl);
+      } else {
+        await new Promise(resolve => {
+          const reader = new FileReader();
+          reader.onload = ev => {
+            try { localStorage.setItem(`media_${storageKey}`, ev.target.result); } catch {}
+            updateMedia(storageKey, ev.target.result);
+            resolve();
+          };
+          reader.readAsDataURL(file);
+        });
+      }
+    } catch {}
+  };
+
+  const inp = <input ref={fileRef} type="file" accept="image/*" style={{ display: "none" }} onChange={onChange} />;
+  return { url, trigger, inp, has: !!url };
+}
+
 export default function Programma() {
   const { siteData } = useSite();
   const C = COLORS;
@@ -108,8 +141,8 @@ export default function Programma() {
   /* Graphics visibility from context */
   const gp = siteData.graphics?.programma ?? {};
 
-  const heroImg    = useUpload();
-  const polaroidImg = useUpload();
+  const heroImg    = useContextUpload("programma_hero");
+  const polaroidImg = useContextUpload("programma_polaroid");
 
   /* IntersectionObserver — trigger animation when row enters viewport */
   const [visible, setVisible] = useState({});
