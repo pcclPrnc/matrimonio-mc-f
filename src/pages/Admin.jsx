@@ -956,6 +956,14 @@ function Dashboard({ onLogout }) {
   const [active, setActive] = useState("testi");
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
+  /* Re-authenticate anonymously if session was restored from sessionStorage
+     (Firebase auth token is lost on page reload even if admin session persists) */
+  useEffect(() => {
+    if (CONFIGURED) {
+      signInAnonymously(auth).catch(() => {});
+    }
+  }, []);
+
   const content = {
     testi:     <SecTesti     siteData={siteData} updateSite={updateSite} />,
     programma: <SecProgramma siteData={siteData} updateSite={updateSite} />,
@@ -975,6 +983,11 @@ function Dashboard({ onLogout }) {
           <span style={{ color: "#fff", fontWeight: 700, fontSize: 15 }}>⚙️ Admin — MC &amp; F</span>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <span style={{ fontFamily: A.ff, fontSize: 11, padding: "2px 8px", borderRadius: 10,
+            background: CONFIGURED ? "#22C55E22" : "#F59E0B22",
+            color: CONFIGURED ? "#86EFAC" : "#FCD34D" }}>
+            {CONFIGURED ? "● Firebase ON" : "● localStorage"}
+          </span>
           <a href="/" target="_blank" style={{ color: "#ffffffAA", fontSize: 12, textDecoration: "none" }}>← Vedi sito</a>
           <button onClick={onLogout} style={btn("ghost", { color: "#fff", borderColor: "#ffffff44", fontSize: 12 })}>Logout</button>
         </div>

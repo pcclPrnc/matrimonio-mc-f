@@ -23,4 +23,10 @@ if (CONFIGURED) {
   auth = getAuth(app);
 }
 
+if (CONFIGURED) {
+  console.log("[Firebase] ✓ Inizializzato — Realtime DB connesso");
+} else {
+  console.warn("[Firebase] ✗ Non configurato — variabili VITE_FIREBASE_* mancanti. Uso localStorage.");
+}
+
 export { db, auth, CONFIGURED };
