@@ -719,6 +719,53 @@ function SecGrafici({ siteData, updateGraphic }) {
           <SvgVisRow key={k} label={l} page="rsvp" itemKey={k} previewEl={el} siteData={siteData} updateGraphic={updateGraphic} />
         ))}
       </AccordionBlock>
+
+      <AccordionBlock title="▸ REGALO">
+        {[
+          { k: "olSx",     l: "Ramo ulivo sinistro",  el: <OliveB scale={2.5} color="#C9A84C" /> },
+          { k: "olDx",     l: "Ramo ulivo destro",    el: <OliveB flip scale={2.5} color="#C9A84C" /> },
+          { k: "rings",    l: "Anelli (hero)",         el: <Rings color="#C9A84C" /> },
+          { k: "dividers", l: "Divisori botanici",     el: <BotDiv color="#3D5A3E" /> },
+        ].map(({ k, l, el }) => (
+          <SvgVisRow key={k} label={l} page="regalo" itemKey={k} previewEl={el} siteData={siteData} updateGraphic={updateGraphic} />
+        ))}
+      </AccordionBlock>
+    </AdminSectionCard>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SECTION 5b — IL REGALO PIÙ GRANDE
+   ═══════════════════════════════════════════════════════════ */
+function SecRegalo({ siteData, updateSite }) {
+  const [frase,        setFrase]        = useState(siteData.regaloFrase        ?? "");
+  const [iban,         setIban]         = useState(siteData.regaloIban         ?? "");
+  const [intestatario, setIntestatario] = useState(siteData.regaloIntestatario ?? "");
+  const [saved,        setSaved]        = useState(false);
+
+  const save = () => {
+    updateSite("regaloFrase",        frase);
+    updateSite("regaloIban",         iban);
+    updateSite("regaloIntestatario", intestatario);
+    setSaved(true); setTimeout(() => setSaved(false), 2000);
+  };
+
+  return (
+    <AdminSectionCard title="💝 Il Regalo più grande">
+      <p style={{ fontFamily: A.ff, fontSize: 12, color: A.accent, marginBottom: 16, padding: "8px 12px", background: A.accentLight, borderRadius: 4 }}>
+        ✓ Le modifiche sono visibili immediatamente nella pagina /regalo.
+      </p>
+      {saved && <p style={{ fontFamily: A.ff, fontSize: 12, color: A.success, marginBottom: 12 }}>✓ Salvato</p>}
+      <AField label="Testo introduttivo" hint="Frase mostrata prima del riquadro IBAN.">
+        <ATextarea value={frase} onChange={e => setFrase(e.target.value)} rows={4} />
+      </AField>
+      <AField label="IBAN" hint={"Inserisci l'IBAN reale (es. IT12 A123 4567 8901 2345 6789 012). Il segnaposto è solo un esempio."}>
+        <AInput value={iban} onChange={e => setIban(e.target.value)} placeholder="IT00 X000 0000 0000 0000 0000 000" />
+      </AField>
+      <AField label="Intestatario">
+        <AInput value={intestatario} onChange={e => setIntestatario(e.target.value)} placeholder="Nome Cognome" />
+      </AField>
+      <button onClick={save} style={btn("primary")}>Salva modifiche</button>
     </AdminSectionCard>
   );
 }
@@ -945,6 +992,7 @@ const SECTIONS = [
   { id: "testi",     label: "📝 Testi del sito" },
   { id: "programma", label: "🗓️ Programma" },
   { id: "faq",       label: "❓ FAQ" },
+  { id: "regalo",    label: "💝 Il Regalo" },
   { id: "rsvp",      label: "📋 Risposte RSVP" },
   { id: "grafici",   label: "🖼 Foto & Grafica" },
   { id: "menu",      label: "🔗 Ordine menu" },
@@ -968,6 +1016,7 @@ function Dashboard({ onLogout }) {
     testi:     <SecTesti     siteData={siteData} updateSite={updateSite} />,
     programma: <SecProgramma siteData={siteData} updateSite={updateSite} />,
     faq:       <SecFAQ       siteData={siteData} updateSite={updateSite} />,
+    regalo:    <SecRegalo    siteData={siteData} updateSite={updateSite} />,
     rsvp:      <SecRSVP />,
     grafici:   <SecGrafici   siteData={siteData} updateGraphic={updateGraphic} />,
     menu:      <SecMenu      siteData={siteData} updateSite={updateSite} />,

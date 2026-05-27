@@ -38,12 +38,18 @@ const DEFAULT_GRAPHICS = {
     decorazioni: { vis: true },
     heroCircle:  { vis: true },
   },
+  regalo: {
+    olSx:     { vis: true },
+    olDx:     { vis: true },
+    rings:    { vis: true },
+    dividers: { vis: true },
+  },
 };
 
 /* ── Menu visibility ─────────────────────────────────────── */
 const DEFAULT_MENU_VIS = {
   "Home": true, "Programma": true, "RSVP": true,
-  "FAQ": true,  "Non posso aspettare": true, "Admin": false,
+  "FAQ": true,  "Non posso aspettare": true, "Il Regalo più grande": true, "Admin": false,
 };
 
 /* ── Site-wide defaults ──────────────────────────────────── */
@@ -59,7 +65,7 @@ const SITE_DEFAULTS = {
   indirizzoRicevimento:"Via di Campo Vecchio 16, Grottaferrata",
   mapsRicevimento:    "https://maps.google.com/?q=Via+di+Campo+Vecchio+16+Grottaferrata",
   webhookUrl:         "",
-  ordineMenu: ["Home", "Programma", "RSVP", "FAQ", "Non posso aspettare"],
+  ordineMenu: ["Home", "Programma", "RSVP", "FAQ", "Non posso aspettare", "Il Regalo più grande"],
   menuVisibility: DEFAULT_MENU_VIS,
   programmaEventi: [
     { ora: "15:00", titolo: "Cerimonia",          desc: "Chiesa di Santa Francesca Romana", icona: "chiesa"   },
@@ -87,6 +93,9 @@ const SITE_DEFAULTS = {
     { q: "Posso fare richieste per il menu?",
       r: "Assolutamente sì! Puoi indicare intolleranze e preferenze alimentari direttamente nel form RSVP." },
   ],
+  regaloFrase:       "Il vostro regalo più grande è la vostra presenza al nostro fianco. Se desiderate farci un pensiero, potete contribuire al nostro viaggio di nozze.",
+  regaloIban:        "IT00 X000 0000 0000 0000 0000 000",
+  regaloIntestatario:"Maria Cristina e Flavio",
   palette:  DEFAULT_PALETTE,
   graphics: DEFAULT_GRAPHICS,
   media:    {},

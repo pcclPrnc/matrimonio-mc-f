@@ -8,6 +8,7 @@ import RSVP from "./pages/RSVP";
 import FAQ from "./pages/FAQ";
 import Game from "./pages/Game";
 import Admin from "./pages/Admin";
+import Regalo from "./pages/Regalo";
 
 export default function App() {
   return (
@@ -20,6 +21,7 @@ export default function App() {
           <Route path="/rsvp"      element={<RSVP />} />
           <Route path="/faq"       element={<FAQ />} />
           <Route path="/game"       element={<Game />} />
+          <Route path="/regalo"    element={<Regalo />} />
           <Route path="/admin"     element={<Admin />} />
         </Routes>
         <Footer />

@@ -5,12 +5,13 @@ import { COLORS, FONTS } from "../designSystem";
 import { useSite } from "../context/SiteContext";
 
 const ROUTE_MAP = {
-  "Home":               "/",
-  "Programma":          "/programma",
-  "RSVP":               "/rsvp",
-  "FAQ":                "/faq",
-  "Non posso aspettare":"/game",
-  "Admin":              "/admin",
+  "Home":                  "/",
+  "Programma":             "/programma",
+  "RSVP":                  "/rsvp",
+  "FAQ":                   "/faq",
+  "Non posso aspettare":   "/game",
+  "Il Regalo più grande":  "/regalo",
+  "Admin":                 "/admin",
 };
 
 export default function Navbar() {

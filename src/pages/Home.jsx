@@ -43,6 +43,13 @@ export default function Home() {
     return () => clearInterval(id);
   }, []);
 
+  const [isDesktop, setIsDesktop] = useState(() => window.innerWidth >= 640);
+  useEffect(() => {
+    const fn = () => setIsDesktop(window.innerWidth >= 640);
+    window.addEventListener("resize", fn, { passive: true });
+    return () => window.removeEventListener("resize", fn);
+  }, []);
+
   const SepDiv = () => g.dividers?.vis !== false
     ? <BotDiv color={C.olive} />
     : null;
@@ -63,39 +70,55 @@ export default function Home() {
         {heroBgUrl && <div style={{ position: "absolute", inset: 0, background: C.cream + "CC" }} />}
         <div style={{ position: "relative", zIndex: 1, width: "100%", display: "flex", flexDirection: "column", alignItems: "center" }}>
 
-          {/* Corner olive branches */}
-          <div style={{ position: "absolute", top: 0, left: 0, opacity: .9 }}>
+          {/* ── Rami ulivo agli angoli ── */}
+          <div style={{ position: "absolute", top: 0, left: 0, opacity: .88, pointerEvents: "none" }}>
             {g.olSx?.vis !== false && (gfx("olSx").url
               ? <img src={gfx("olSx").url} alt="" style={{ width: 110, height: 120, objectFit: "contain" }} />
               : <OliveB scale={.86} color={C.gold} />
             )}
           </div>
-          <div style={{ position: "absolute", top: 0, right: 0, opacity: .9 }}>
+          <div style={{ position: "absolute", top: 0, right: 0, opacity: .88, pointerEvents: "none" }}>
             {g.olDx?.vis !== false && (gfx("olDx").url
               ? <img src={gfx("olDx").url} alt="" style={{ width: 110, height: 120, objectFit: "contain", transform: "scaleX(-1)" }} />
               : <OliveB flip scale={.86} color={C.gold} />
             )}
           </div>
 
-          {/* Decorative SVG / photo slots */}
-          <div style={{ position: "absolute", top: 72, right: 44, opacity: .88 }}>
-            <PhotoSlot up={gfx("grape")} vis={g.grape?.vis !== false} edit={false} size={68} svg={<Grape color={C.olive} gc="#9B72CF" />} />
+          {/* ── Cocktail — sinistra, alta (mobile: ridotto) ── */}
+          <div style={{ position: "absolute", top: "21%", left: 8, opacity: .56, transform: "rotate(-14deg)", pointerEvents: "none" }}>
+            <PhotoSlot up={gfx("cocktail")} vis={g.cocktail?.vis !== false} edit={false}
+              size={isDesktop ? 46 : 32} svg={<Cocktail color={C.rose} />} />
           </div>
-          <div style={{ position: "absolute", top: 66, right: 4, opacity: .75 }}>
-            <PhotoSlot up={gfx("wineHero")} vis={g.wineHero?.vis !== false} edit={false} size={50} svg={<Wine color={C.dark} wc={C.rose} />} />
+
+          {/* ── Vino — destra, alta (mobile: ridotto) ── */}
+          <div style={{ position: "absolute", top: "17%", right: 10, opacity: .60, transform: "rotate(11deg)", pointerEvents: "none" }}>
+            <PhotoSlot up={gfx("wineHero")} vis={g.wineHero?.vis !== false} edit={false}
+              size={isDesktop ? 44 : 30} svg={<Wine color={C.dark} wc={C.rose} />} />
           </div>
-          <div style={{ position: "absolute", left: 4, top: "38%", opacity: .7 }}>
-            <PhotoSlot up={gfx("cake")} vis={g.cake?.vis !== false} edit={false} size={80} svg={<Cake color={C.gold} />} />
-          </div>
-          <div style={{ position: "absolute", right: 4, top: "52%", opacity: .7 }}>
-            <PhotoSlot up={gfx("cocktail")} vis={g.cocktail?.vis !== false} edit={false} size={50} svg={<Cocktail color={C.rose} />} />
-          </div>
-          <div style={{ position: "absolute", right: 8, top: "33%", opacity: .78 }}>
-            <PhotoSlot up={gfx("rings")} vis={g.rings?.vis !== false} edit={false} size={68} svg={<Rings color={C.gold} />} />
-          </div>
-          <div style={{ position: "absolute", bottom: 50, right: 6, opacity: .82 }}>
-            <PhotoSlot up={gfx("moon")} vis={g.moon?.vis !== false} edit={false} size={54} svg={<Moon color={C.gold} />} />
-          </div>
+
+          {/* ── Anelli — destra, centro (solo desktop) ── */}
+          {isDesktop && (
+            <div style={{ position: "absolute", top: "44%", right: 85, opacity: .68, transform: "rotate(-7deg)", pointerEvents: "none" }}>
+              <PhotoSlot up={gfx("rings")} vis={g.rings?.vis !== false} edit={false}
+                size={64} svg={<Rings color={C.gold} />} />
+            </div>
+          )}
+
+          {/* ── Torta — sinistra, bassa (solo desktop) ── */}
+          {isDesktop && (
+            <div style={{ position: "absolute", top: "62%", left: 59, opacity: .55, transform: "rotate(9deg)", pointerEvents: "none" }}>
+              <PhotoSlot up={gfx("cake")} vis={g.cake?.vis !== false} edit={false}
+                size={72} svg={<Cake color={C.gold} />} />
+            </div>
+          )}
+
+          {/* ── Grappolo — destra, bassa (solo desktop) ── */}
+          {isDesktop && (
+            <div style={{ position: "absolute", top: "65%", right: 24, opacity: .62, transform: "rotate(5deg)", pointerEvents: "none" }}>
+              <PhotoSlot up={gfx("grape")} vis={g.grape?.vis !== false} edit={false}
+                size={58} svg={<Grape color={C.olive} gc="#9B72CF" />} />
+            </div>
+          )}
 
           {/* Names */}
           <p className="a0" style={{ fontFamily: FONTS.body, fontStyle: "italic", fontSize: 18, letterSpacing: ".22em", color: C.rose, marginBottom: 20 }}>Ci sposiamo! ♡</p>
@@ -143,7 +166,14 @@ export default function Home() {
 
       {/* ── Countdown ── */}
       {g.countdownSection?.vis !== false && (
-        <section style={{ padding: "68px 20px", textAlign: "center", background: C.cream }}>
+        <section style={{ padding: "68px 20px", textAlign: "center", background: C.cream, position: "relative" }}>
+          {/* ── Luna — angolo in alto a destra (solo desktop) ── */}
+          {isDesktop && (
+            <div style={{ position: "absolute", top: 22, right: 30, opacity: .58, transform: "rotate(-13deg)", pointerEvents: "none" }}>
+              <PhotoSlot up={gfx("moon")} vis={g.moon?.vis !== false} edit={false}
+                size={50} svg={<Moon color={C.gold} />} />
+            </div>
+          )}
           <p style={{ fontFamily: FONTS.body, fontStyle: "italic", fontSize: 20, color: C.rose, marginBottom: 46, letterSpacing: ".1em" }}>Mancano ancora…</p>
           <div style={{ display: "flex", justifyContent: "center", gap: "clamp(14px,4vw,62px)", flexWrap: "wrap", alignItems: "flex-start" }}>
             {[{ v: t.days, l: "Giorni" }, { v: t.hours, l: "Ore" }, { v: t.minutes, l: "Minuti" }, { v: t.seconds, l: "Secondi" }].map(({ v, l }, i) => (
