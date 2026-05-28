@@ -107,7 +107,7 @@ function ProgressBar({ step, presenza, C }) {
               <div style={{
                 height: 1, width: 64, flexShrink: 0,
                 background: C.olive,
-                opacity: done && !(s.n === 1 && presence === false && step === 3) ? 0.55 : 0.18,
+                opacity: done && !(s.n === 1 && presenza === false && step === 3) ? 0.55 : 0.18,
                 margin: "0 0 27px", alignSelf: "flex-start", marginTop: 17,
               }} />
             )}
@@ -224,13 +224,26 @@ export default function RSVP() {
   const { siteData, updateMedia } = useSite();
   const C = COLORS;
 
-  /* Form state — restored from sessionStorage on mount */
+  /* Form state — restored from sessionStorage on mount.
+     Spread INITIAL_FORM first so any missing field (e.g. from a stale
+     cached draft) falls back to the default instead of crashing. */
   const [formData, setFormData] = useState(() => {
     try {
       const saved = sessionStorage.getItem("rsvp_draft");
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return {
+          ...INITIAL_FORM,
+          ...parsed,
+          // ensure persone is always a valid array with complete objects
+          persone: Array.isArray(parsed.persone) && parsed.persone.length > 0
+            ? parsed.persone.map(p => ({ ...EMPTY_PERSONA(), ...p,
+                allergie: Array.isArray(p?.allergie) ? p.allergie : [] }))
+            : [EMPTY_PERSONA()],
+        };
+      }
     } catch {}
-    return INITIAL_FORM;
+    return { ...INITIAL_FORM };
   });
 
   const [step, setStep]           = useState(1);
@@ -328,8 +341,8 @@ export default function RSVP() {
       if (formData.presenza === null) errs.presenza = "Seleziona se sarai presente";
       setErrors(errs);
       if (Object.keys(errs).length > 0) {
-        const ref = errs.nome ? nomeRef : errs.cognome ? cognomeRef : presenzaRef;
-        ref.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+        const errRef = errs.nome ? nomeRef : errs.cognome ? cognomeRef : presenzaRef;
+        errRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
         return;
       }
       setStep(formData.presenza === false ? 3 : 2);
@@ -574,7 +587,7 @@ export default function RSVP() {
                   Numero di Persone
                 </p>
                 <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-                  <button onClick={() => setNPersone(-1)} disabled={formData.nPersone <= 1}
+                  <button type="button" onClick={() => setNPersone(-1)} disabled={formData.nPersone <= 1}
                     style={{
                       width: 38, height: 38, borderRadius: "50%", border: `1.5px solid ${C.olive}`,
                       background: "transparent", cursor: formData.nPersone <= 1 ? "not-allowed" : "pointer",
@@ -590,7 +603,7 @@ export default function RSVP() {
                       {formData.nPersone === 1 ? "Solo tu" : `tu + ${formData.nPersone - 1}`}
                     </p>
                   </div>
-                  <button onClick={() => setNPersone(+1)} disabled={formData.nPersone >= MAX_PERSONE}
+                  <button type="button" onClick={() => setNPersone(+1)} disabled={formData.nPersone >= MAX_PERSONE}
                     style={{
                       width: 38, height: 38, borderRadius: "50%", border: `1.5px solid ${C.olive}`,
                       background: "transparent", cursor: formData.nPersone >= MAX_PERSONE ? "not-allowed" : "pointer",
@@ -607,7 +620,7 @@ export default function RSVP() {
         {/* ════ STEP 2 ════ */}
         {step === 2 && (
           <div>
-            {formData.persone.map((persona, idx) => {
+            {(formData.persone ?? [EMPTY_PERSONA()]).map((persona, idx) => {
               const isMain = idx === 0;
               const nomeDisplay = isMain
                 ? `${formData.nome} ${formData.cognome}`.trim()
@@ -661,7 +674,7 @@ export default function RSVP() {
                       {ALLERGIE_LIST.map(({ key, label, emoji }) => (
                         <CustomCheckbox
                           key={key}
-                          checked={persona.allergie.includes(key)}
+                          checked={(persona.allergie ?? []).includes(key)}
                           onChange={() => toggleAllergia(idx, key)}
                           label={label} emoji={emoji} C={C}
                         />
@@ -720,16 +733,17 @@ export default function RSVP() {
         {/* ── Navigazione ── */}
         <div style={{ display: "flex", justifyContent: step > 1 ? "space-between" : "flex-end", alignItems: "center" }}>
           {step > 1 && (
-            <button className="rsvp-navbtn" onClick={prevStep} style={navBtn(false)}>
+            <button type="button" className="rsvp-navbtn" onClick={prevStep} style={navBtn(false)}>
               ← Indietro
             </button>
           )}
 
           {step < 3
-            ? <button className="rsvp-navbtn" onClick={nextStep} style={navBtn(true)}>
+            ? <button type="button" className="rsvp-navbtn" onClick={nextStep} style={navBtn(true)}>
                 Avanti →
               </button>
             : <button
+                type="button"
                 className="rsvp-navbtn"
                 onClick={handleSubmit}
                 disabled={loading}
