@@ -1,12 +1,19 @@
 import { useState } from "react";
 import { COLORS, FONTS, OliveB, BotDiv, Rings } from "../designSystem.jsx";
+import PhotoSlot, { ImgSlot } from "../components/PhotoSlot";
 import { useSite } from "../context/SiteContext";
+
+const B = import.meta.env.BASE_URL;
+const regaloBase = (key) => `${B}media/graphic_regalo_${key}.png`;
+const regaloDivBase = `${B}media/graphic_regalo_dividers.png`;
 
 export default function Regalo() {
   const { siteData } = useSite();
   const C = { ...COLORS, ...(siteData.palette ?? {}) };
 
   const g = siteData.graphics?.regalo ?? {};
+  const media = siteData.media ?? {};
+  const gfx = (key) => ({ url: media[`graphic_regalo_${key}`] || null });
 
   const frase       = siteData.regaloFrase       ?? "";
   const iban        = siteData.regaloIban        ?? "";
@@ -51,21 +58,20 @@ export default function Regalo() {
         overflow: "hidden",
       }}>
         {/* Corner olive branches */}
-        {g.olSx?.vis !== false && (
-          <div style={{ position: "absolute", top: 80, left: 0, opacity: 0.7 }}>
-            <OliveB scale={0.75} color={C.gold} />
-          </div>
-        )}
-        {g.olDx?.vis !== false && (
-          <div style={{ position: "absolute", top: 80, right: 0, opacity: 0.7 }}>
-            <OliveB flip scale={0.75} color={C.gold} />
-          </div>
-        )}
+        <div style={{ position: "absolute", top: 80, left: 0, opacity: 0.7 }}>
+          <PhotoSlot up={gfx("olSx")} vis={g.olSx?.vis !== false} edit={false}
+            size={135} base={regaloBase("olSx")} svg={<OliveB scale={0.75} color={C.gold} />} />
+        </div>
+        <div style={{ position: "absolute", top: 80, right: 0, opacity: 0.7, transform: "scaleX(-1)" }}>
+          <PhotoSlot up={gfx("olDx")} vis={g.olDx?.vis !== false} edit={false}
+            size={135} base={regaloBase("olDx")} svg={<OliveB flip scale={0.75} color={C.gold} />} />
+        </div>
 
         {/* Rings icon */}
         {g.rings?.vis !== false && (
           <div style={{ display: "flex", justifyContent: "center", marginBottom: 18 }}>
-            <Rings color={C.gold} />
+            <PhotoSlot up={gfx("rings")} vis={true} edit={false}
+              size={96} base={regaloBase("rings")} svg={<Rings color={C.gold} />} />
           </div>
         )}
 
@@ -93,7 +99,12 @@ export default function Regalo() {
       {/* ── Divider ── */}
       {g.dividers?.vis !== false && (
         <div style={{ display: "flex", justifyContent: "center", margin: "0 0 48px" }}>
-          <BotDiv color={C.olive} />
+          <ImgSlot
+            customUrl={gfx("dividers").url}
+            base={regaloDivBase}
+            svg={<BotDiv color={C.olive} />}
+            imgStyle={{ maxWidth: "100%", display: "block" }}
+          />
         </div>
       )}
 
@@ -217,7 +228,12 @@ export default function Regalo() {
       {/* ── Bottom divider ── */}
       {g.dividers?.vis !== false && (
         <div style={{ display: "flex", justifyContent: "center", paddingBottom: 60 }}>
-          <BotDiv color={C.olive} />
+          <ImgSlot
+            customUrl={gfx("dividers").url}
+            base={regaloDivBase}
+            svg={<BotDiv color={C.olive} />}
+            imgStyle={{ maxWidth: "100%", display: "block" }}
+          />
         </div>
       )}
     </div>

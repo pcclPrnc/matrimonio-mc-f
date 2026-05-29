@@ -44,6 +44,10 @@ const DEFAULT_GRAPHICS = {
     rings:    { vis: true },
     dividers: { vis: true },
   },
+  footer: {
+    moon:  { vis: true },
+    rings: { vis: true },
+  },
 };
 
 /* ── Menu visibility ─────────────────────────────────────── */

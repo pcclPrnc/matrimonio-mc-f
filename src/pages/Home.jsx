@@ -3,8 +3,12 @@ import {
   COLORS, FONTS,
   OliveB, Grape, BotDiv, Wine, Cake, Rings, Moon, Cocktail, Church, HeartSVG,
 } from "../designSystem";
-import PhotoSlot from "../components/PhotoSlot";
+import PhotoSlot, { ImgSlot } from "../components/PhotoSlot";
 import { useSite } from "../context/SiteContext";
+
+/* Base path for static images in public/media/ (works in dev AND on GH Pages) */
+const B = import.meta.env.BASE_URL;
+const homeBase = (key) => `${B}media/graphic_home_${key}.png`;
 
 export default function Home() {
   const { siteData } = useSite();
@@ -51,7 +55,12 @@ export default function Home() {
   }, []);
 
   const SepDiv = () => g.dividers?.vis !== false
-    ? <BotDiv color={C.olive} />
+    ? <ImgSlot
+        customUrl={gfx("dividers").url}
+        base={homeBase("dividers")}
+        svg={<BotDiv color={C.olive} />}
+        imgStyle={{ width: "75%", maxWidth: "75%", display: "block", margin: "0 auto" }}
+      />
     : null;
 
   return (
@@ -72,35 +81,31 @@ export default function Home() {
 
           {/* ── Rami ulivo agli angoli ── */}
           <div style={{ position: "absolute", top: 0, left: 0, opacity: .88, pointerEvents: "none" }}>
-            {g.olSx?.vis !== false && (gfx("olSx").url
-              ? <img src={gfx("olSx").url} alt="" style={{ width: 110, height: 120, objectFit: "contain" }} />
-              : <OliveB scale={.86} color={C.gold} />
-            )}
+            <PhotoSlot up={gfx("olSx")} vis={g.olSx?.vis !== false} edit={false}
+              size={248} base={homeBase("olSx")} svg={<OliveB scale={.86} color={C.gold} />} />
           </div>
-          <div style={{ position: "absolute", top: 0, right: 0, opacity: .88, pointerEvents: "none" }}>
-            {g.olDx?.vis !== false && (gfx("olDx").url
-              ? <img src={gfx("olDx").url} alt="" style={{ width: 110, height: 120, objectFit: "contain", transform: "scaleX(-1)" }} />
-              : <OliveB flip scale={.86} color={C.gold} />
-            )}
+          <div style={{ position: "absolute", top: 0, right: 0, opacity: .88, pointerEvents: "none", transform: "scaleX(-1)" }}>
+            <PhotoSlot up={gfx("olDx")} vis={g.olDx?.vis !== false} edit={false}
+              size={248} base={homeBase("olDx")} svg={<OliveB flip scale={.86} color={C.gold} />} />
           </div>
 
           {/* ── Cocktail — sinistra, alta (mobile: ridotto) ── */}
           <div style={{ position: "absolute", top: "21%", left: 8, opacity: .56, transform: "rotate(-14deg)", pointerEvents: "none" }}>
             <PhotoSlot up={gfx("cocktail")} vis={g.cocktail?.vis !== false} edit={false}
-              size={isDesktop ? 46 : 32} svg={<Cocktail color={C.rose} />} />
+              size={isDesktop ? 104 : 72} base={homeBase("cocktail")} svg={<Cocktail color={C.rose} />} />
           </div>
 
           {/* ── Vino — destra, alta (mobile: ridotto) ── */}
           <div style={{ position: "absolute", top: "17%", right: 10, opacity: .60, transform: "rotate(11deg)", pointerEvents: "none" }}>
             <PhotoSlot up={gfx("wineHero")} vis={g.wineHero?.vis !== false} edit={false}
-              size={isDesktop ? 44 : 30} svg={<Wine color={C.dark} wc={C.rose} />} />
+              size={isDesktop ? 99 : 68} base={homeBase("wineHero")} svg={<Wine color={C.dark} wc={C.rose} />} />
           </div>
 
           {/* ── Anelli — destra, centro (solo desktop) ── */}
           {isDesktop && (
             <div style={{ position: "absolute", top: "44%", right: 85, opacity: .68, transform: "rotate(-7deg)", pointerEvents: "none" }}>
               <PhotoSlot up={gfx("rings")} vis={g.rings?.vis !== false} edit={false}
-                size={64} svg={<Rings color={C.gold} />} />
+                size={144} base={homeBase("rings")} svg={<Rings color={C.gold} />} />
             </div>
           )}
 
@@ -108,7 +113,7 @@ export default function Home() {
           {isDesktop && (
             <div style={{ position: "absolute", top: "62%", left: 59, opacity: .55, transform: "rotate(9deg)", pointerEvents: "none" }}>
               <PhotoSlot up={gfx("cake")} vis={g.cake?.vis !== false} edit={false}
-                size={72} svg={<Cake color={C.gold} />} />
+                size={162} base={homeBase("cake")} svg={<Cake color={C.gold} />} />
             </div>
           )}
 
@@ -116,7 +121,7 @@ export default function Home() {
           {isDesktop && (
             <div style={{ position: "absolute", top: "65%", right: 24, opacity: .62, transform: "rotate(5deg)", pointerEvents: "none" }}>
               <PhotoSlot up={gfx("grape")} vis={g.grape?.vis !== false} edit={false}
-                size={58} svg={<Grape color={C.olive} gc="#9B72CF" />} />
+                size={131} base={homeBase("grape")} svg={<Grape color={C.olive} gc="#9B72CF" />} />
             </div>
           )}
 
@@ -171,7 +176,7 @@ export default function Home() {
           {isDesktop && (
             <div style={{ position: "absolute", top: 22, right: 30, opacity: .58, transform: "rotate(-13deg)", pointerEvents: "none" }}>
               <PhotoSlot up={gfx("moon")} vis={g.moon?.vis !== false} edit={false}
-                size={50} svg={<Moon color={C.gold} />} />
+                size={113} base={homeBase("moon")} svg={<Moon color={C.gold} />} />
             </div>
           )}
           <p style={{ fontFamily: FONTS.body, fontStyle: "italic", fontSize: 20, color: C.rose, marginBottom: 46, letterSpacing: ".1em" }}>Mancano ancora…</p>
@@ -200,7 +205,7 @@ export default function Home() {
 
             {/* Card Cerimonia */}
             <div className="wc-card" style={{ background: C.card, border: `1px solid ${C.olive}1A`, borderRadius: 10, padding: "38px 24px", display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: 13, boxShadow: "0 4px 18px rgba(0,0,0,.05)" }}>
-              <PhotoSlot up={gfx("churchCard")} vis={g.churchCard?.vis !== false} edit={false} size={56} svg={<Church color={C.olive} />} />
+              <PhotoSlot up={gfx("churchCard")} vis={g.churchCard?.vis !== false} edit={false} size={84} base={homeBase("churchCard")} svg={<Church color={C.olive} />} />
               <h3 style={{ fontFamily: FONTS.serif, fontSize: 20, color: C.olive, fontWeight: 400, fontStyle: "italic" }}>Cerimonia</h3>
               <div style={{ height: 1, width: 38, background: C.gold, opacity: .5 }} />
               <div style={{ fontFamily: FONTS.body, fontSize: 15, lineHeight: 1.8, color: C.dark }}>
@@ -216,7 +221,7 @@ export default function Home() {
 
             {/* Card Ricevimento */}
             <div className="wc-card" style={{ background: C.card, border: `1px solid ${C.olive}1A`, borderRadius: 10, padding: "38px 24px", display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: 13, boxShadow: "0 4px 18px rgba(0,0,0,.05)" }}>
-              <PhotoSlot up={gfx("wineCard")} vis={g.wineCard?.vis !== false} edit={false} size={56} svg={<Wine color={C.gold} wc={C.rose} />} />
+              <PhotoSlot up={gfx("wineCard")} vis={g.wineCard?.vis !== false} edit={false} size={84} base={homeBase("wineCard")} svg={<Wine color={C.gold} wc={C.rose} />} />
               <h3 style={{ fontFamily: FONTS.serif, fontSize: 20, color: C.olive, fontWeight: 400, fontStyle: "italic" }}>Ricevimento</h3>
               <div style={{ height: 1, width: 38, background: C.gold, opacity: .5 }} />
               <div style={{ fontFamily: FONTS.body, fontSize: 15, lineHeight: 1.8, color: C.dark }}>
@@ -232,7 +237,7 @@ export default function Home() {
 
             {/* Card RSVP */}
             <div className="wc-card" style={{ background: C.card, border: `1px solid ${C.rose}28`, borderRadius: 10, padding: "38px 24px", display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: 13, boxShadow: "0 4px 18px rgba(212,132,154,.06)" }}>
-              <PhotoSlot up={gfx("rsvpCard")} vis={g.rsvpCard?.vis !== false} edit={false} size={56} svg={<HeartSVG color={C.rose} />} />
+              <PhotoSlot up={gfx("rsvpCard")} vis={g.rsvpCard?.vis !== false} edit={false} size={84} base={homeBase("rsvpCard")} svg={<HeartSVG color={C.rose} />} />
               <h3 style={{ fontFamily: FONTS.serif, fontSize: 20, color: C.rose, fontWeight: 400, fontStyle: "italic" }}>RSVP</h3>
               <div style={{ height: 1, width: 38, background: C.rose, opacity: .4 }} />
               <div style={{ fontFamily: FONTS.body, fontSize: 15, lineHeight: 1.8, color: C.dark }}>

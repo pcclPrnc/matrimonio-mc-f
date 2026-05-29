@@ -1,4 +1,7 @@
 import { useState, useEffect, useRef } from "react";
+
+const B = import.meta.env.BASE_URL;
+const progBase = (key) => `${B}media/graphic_programma_${key}.png`;
 import {
   COLORS, FONTS,
   Church, Cocktail, Cake, Moon, HeartSVG,
@@ -60,9 +63,27 @@ const iconColor = (key, C) => ({
 }[key] ?? C.olive);
 
 /* ── EventCard ───────────────────────────────────────────── */
-function EventCard({ event, isRight, C, anim }) {
+function EventCard({ event, isRight, C, anim, customUrl }) {
+  const [baseErr, setBaseErr] = useState(false);
   const render = ICON_MAP[event.icona];
   const icolor = iconColor(event.icona, C);
+
+  /* Fallback chain: admin upload → static base PNG → original SVG */
+  const iconContent = (() => {
+    if (customUrl) {
+      return <img src={customUrl} alt="" style={{ width: 72, height: 72, objectFit: "contain" }} />;
+    }
+    if (!baseErr) {
+      return (
+        <img
+          src={progBase(event.icona)} alt=""
+          style={{ width: 72, height: 72, objectFit: "contain" }}
+          onError={() => setBaseErr(true)}
+        />
+      );
+    }
+    return render ? render(icolor) : null;
+  })();
 
   return (
     <div style={{ textAlign: isRight ? "left" : "right", ...anim }}>
@@ -72,9 +93,9 @@ function EventCard({ event, isRight, C, anim }) {
       }}>
         {event.ora}
       </p>
-      {render && (
+      {iconContent && (
         <div style={{ display: "flex", justifyContent: isRight ? "flex-start" : "flex-end", marginBottom: 10, opacity: .88 }}>
-          {render(icolor)}
+          {iconContent}
         </div>
       )}
       <h3 style={{ fontFamily: FONTS.serif, fontSize: 20, fontWeight: 400, color: C.olive, marginBottom: 5 }}>
@@ -140,6 +161,15 @@ export default function Programma() {
 
   /* Graphics visibility from context */
   const gp = siteData.graphics?.programma ?? {};
+
+  /* Admin-uploaded icon URLs (override static base images) */
+  const media = siteData.media ?? {};
+  const progCustomUrl = (key) => media[`graphic_programma_${key}`] || null;
+
+  /* Vine line (ramo centrale) */
+  const [vineLineBaseErr, setVineLineBaseErr] = useState(false);
+  const vineLineCustomUrl = media[`graphic_programma_vineLine`] || null;
+  const vineLineUrl = vineLineCustomUrl || (!vineLineBaseErr ? `${B}media/graphic_programma_vineLine.png` : null);
 
   const heroImg    = useContextUpload("programma_hero");
   const polaroidImg = useContextUpload("programma_polaroid");
@@ -278,32 +308,45 @@ export default function Programma() {
       {/* ══ Timeline ══ */}
       <div style={{ position: "relative", maxWidth: 900, margin: "0 auto", padding: "48px 20px 80px" }}>
 
-        {/* Vertical line */}
+        {/* Ramo centrale — immagine base se disponibile, altrimenti linea CSS + bacche SVG */}
         {gp.vineLine?.vis !== false && (
-          <div
-            className="prog-vline"
-            style={{
-              position: "absolute", top: 0, bottom: 0,
-              left: "50%", transform: "translateX(-50%)",
-              width: 2, background: `${C.olive}38`, zIndex: 0,
-            }}
-          />
+          vineLineUrl
+            ? <img
+                src={vineLineUrl}
+                alt=""
+                className="prog-vline"
+                style={{
+                  position: "absolute", top: "7.5%", left: "50%",
+                  transform: "translateX(calc(-50% - 32px))",
+                  height: "85%", width: "auto", objectFit: "contain",
+                  zIndex: 0, display: "block", pointerEvents: "none",
+                }}
+                onError={vineLineCustomUrl ? undefined : () => setVineLineBaseErr(true)}
+              />
+            : <>
+                <div
+                  className="prog-vline"
+                  style={{
+                    position: "absolute", top: 0, bottom: 0,
+                    left: "50%", transform: "translateX(-50%)",
+                    width: 2, background: `${C.olive}38`, zIndex: 0,
+                  }}
+                />
+                {berryPositions.map((pct, j) => (
+                  <div
+                    key={j}
+                    className="prog-vine-deco"
+                    style={{
+                      position: "absolute", left: "50%", top: `${pct}%`,
+                      transform: "translate(-50%, -50%)",
+                      zIndex: 0, pointerEvents: "none",
+                    }}
+                  >
+                    <VineBerry color={C.olive} />
+                  </div>
+                ))}
+              </>
         )}
-
-        {/* Vine berry decorations (only when vertical line is visible) */}
-        {gp.vineLine?.vis !== false && berryPositions.map((pct, j) => (
-          <div
-            key={j}
-            className="prog-vine-deco"
-            style={{
-              position: "absolute", left: "50%", top: `${pct}%`,
-              transform: "translate(-50%, -50%)",
-              zIndex: 0, pointerEvents: "none",
-            }}
-          >
-            <VineBerry color={C.olive} />
-          </div>
-        ))}
 
         {/* Event rows */}
         {events.map((event, i) => {
@@ -318,7 +361,7 @@ export default function Programma() {
                 {/* ── Left column (desktop only, even events) ── */}
                 <div className="prog-left-col" style={{ zIndex: 1 }}>
                   {isLeft && (
-                    <EventCard event={event} isRight={false} C={C} anim={animLeft(i)} />
+                    <EventCard event={event} isRight={false} C={C} anim={animLeft(i)} customUrl={progCustomUrl(event.icona)} />
                   )}
                 </div>
 
@@ -341,12 +384,12 @@ export default function Programma() {
                 <div className="prog-right-col" style={{ zIndex: 1 }}>
                   {/* Desktop: odd events */}
                   {!isLeft && (
-                    <EventCard event={event} isRight={true} C={C} anim={animRight(i)} />
+                    <EventCard event={event} isRight={true} C={C} anim={animRight(i)} customUrl={progCustomUrl(event.icona)} />
                   )}
                   {/* Mobile only: even events that are normally on the left */}
                   {isLeft && (
                     <div className="prog-mobile-only">
-                      <EventCard event={event} isRight={true} C={C} anim={animRight(i)} />
+                      <EventCard event={event} isRight={true} C={C} anim={animRight(i)} customUrl={progCustomUrl(event.icona)} />
                     </div>
                   )}
                 </div>

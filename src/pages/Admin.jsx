@@ -730,6 +730,15 @@ function SecGrafici({ siteData, updateGraphic }) {
           <SvgVisRow key={k} label={l} page="regalo" itemKey={k} previewEl={el} siteData={siteData} updateGraphic={updateGraphic} />
         ))}
       </AccordionBlock>
+
+      <AccordionBlock title="▸ FOOTER (tutte le pagine)">
+        {[
+          { k: "moon",  l: "Luna",  el: <Moon color="#C9A84C" /> },
+          { k: "rings", l: "Fedi",  el: <Rings color="#C9A84C" /> },
+        ].map(({ k, l, el }) => (
+          <SvgVisRow key={k} label={l} page="footer" itemKey={k} previewEl={el} siteData={siteData} updateGraphic={updateGraphic} />
+        ))}
+      </AccordionBlock>
     </AdminSectionCard>
   );
 }
