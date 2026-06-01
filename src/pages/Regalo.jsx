@@ -100,7 +100,7 @@ export default function Regalo() {
       {/* ── Divider ── */}
       {g.dividers?.vis !== false && (
         <div style={{ display: "flex", justifyContent: "center", margin: "0 0 48px" }}>
-          <div style={{ width: "38%", padding: "0 16px", boxSizing: "border-box" }}>
+          <div style={{ width: "clamp(200px, 38vw, 380px)", padding: "0 16px", boxSizing: "border-box" }}>
             <ImgSlot
               customUrl={gfx("dividers").url}
               base={regaloDivBase}
@@ -231,7 +231,7 @@ export default function Regalo() {
       {/* ── Bottom divider ── */}
       {g.dividers?.vis !== false && (
         <div style={{ display: "flex", justifyContent: "center", paddingBottom: 60 }}>
-          <div style={{ width: "38%", padding: "0 16px", boxSizing: "border-box" }}>
+          <div style={{ width: "clamp(200px, 38vw, 380px)", padding: "0 16px", boxSizing: "border-box" }}>
             <ImgSlot
               customUrl={gfx("dividers").url}
               base={regaloDivBase}
