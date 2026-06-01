@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 
 const B = import.meta.env.BASE_URL;
 const progBase = (key) => `${B}media/graphic_programma_${key}.png`;
@@ -7,8 +7,6 @@ import {
   Church, Cocktail, Cake, Moon, HeartSVG,
 } from "../designSystem.jsx";
 import { useSite } from "../context/SiteContext";
-import { uploadMedia, isGithubConfigured } from "../services/githubApi";
-
 /* ── Page-specific SVG icons ────────────────────────────── */
 const ForkPlate = ({ color = "#1C1C1C" }) => (
   <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
@@ -119,39 +117,6 @@ function VineBerry({ color }) {
 }
 
 /* ── Main Page ───────────────────────────────────────────── */
-/* ── Inline upload hook wired to Firebase/context ─────────── */
-function useContextUpload(storageKey) {
-  const { siteData, updateMedia } = useSite();
-  const fileRef = useRef();
-  const url = siteData.media?.[storageKey] || localStorage.getItem(`media_${storageKey}`) || null;
-
-  const trigger = () => fileRef.current?.click();
-
-  const onChange = async e => {
-    const file = e.target.files?.[0]; if (!file) return;
-    e.target.value = "";
-    try {
-      if (isGithubConfigured()) {
-        const dlUrl = await uploadMedia(storageKey, file);
-        updateMedia(storageKey, dlUrl);
-      } else {
-        await new Promise(resolve => {
-          const reader = new FileReader();
-          reader.onload = ev => {
-            try { localStorage.setItem(`media_${storageKey}`, ev.target.result); } catch {}
-            updateMedia(storageKey, ev.target.result);
-            resolve();
-          };
-          reader.readAsDataURL(file);
-        });
-      }
-    } catch {}
-  };
-
-  const inp = <input ref={fileRef} type="file" accept="image/*" style={{ display: "none" }} onChange={onChange} />;
-  return { url, trigger, inp, has: !!url };
-}
-
 export default function Programma() {
   const { siteData } = useSite();
   const C = COLORS;
@@ -171,8 +136,9 @@ export default function Programma() {
   const vineLineCustomUrl = media[`graphic_programma_vineLine`] || null;
   const vineLineUrl = vineLineCustomUrl || (!vineLineBaseErr ? `${B}media/graphic_programma_vineLine.png` : null);
 
-  const heroImg    = useContextUpload("programma_hero");
-  const polaroidImg = useContextUpload("programma_polaroid");
+  /* Read-only image URLs (admin sets these via Admin panel) */
+  const heroImgUrl    = media["programma_hero"]    || localStorage.getItem("media_programma_hero")    || null;
+  const polaroidImgUrl = media["programma_polaroid"] || localStorage.getItem("media_programma_polaroid") || null;
 
   /* IntersectionObserver — trigger animation when row enters viewport */
   const [visible, setVisible] = useState({});
@@ -255,13 +221,13 @@ export default function Programma() {
       `}</style>
 
       {/* ══ Hero photo ══ */}
-      {gp.heroImg?.vis !== false && heroImg.url && (
+      {gp.heroImg?.vis !== false && heroImgUrl && (
       <div style={{ padding: "80px 20px 0" }}>
         <div style={{
           width: "100%", height: 224, maxWidth: 900, margin: "0 auto",
           borderRadius: 12, overflow: "hidden", position: "relative",
         }}>
-          <img src={heroImg.url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+          <img src={heroImgUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
         </div>
       </div>
       )}
@@ -396,7 +362,7 @@ export default function Programma() {
               </div>
 
               {/* ── Polaroid slot between event 4 (Discorsi) and 5 (Torta) ── */}
-              {i === 3 && polaroidImg.url && (
+              {i === 3 && polaroidImgUrl && (
                 <div style={{ display: "flex", justifyContent: "center", margin: "-16px 0 56px", position: "relative", zIndex: 1 }}>
                   <div
                     style={{
@@ -415,7 +381,7 @@ export default function Programma() {
                       e.currentTarget.style.boxShadow = "0 8px 32px rgba(0,0,0,.11), 0 2px 8px rgba(0,0,0,.07)";
                     }}
                   >
-                    <img src={polaroidImg.url} alt="" style={{ width: "100%", height: 220, objectFit: "cover", display: "block", borderRadius: 1 }} />
+                    <img src={polaroidImgUrl} alt="" style={{ width: "100%", height: 220, objectFit: "cover", display: "block", borderRadius: 1 }} />
                     <p style={{ textAlign: "center", marginTop: 10, fontFamily: FONTS.script, fontSize: 17, color: C.dark, opacity: .52 }}>
                       📷 Momento speciale
                     </p>

@@ -4,7 +4,6 @@ import { COLORS, FONTS } from "../designSystem.jsx";
 import { useSite } from "../context/SiteContext";
 import { db, CONFIGURED } from "../firebase";
 import { ref, push } from "firebase/database";
-import { uploadMedia, isGithubConfigured } from "../services/githubApi";
 
 /* ═══════════════════════════════════════════════════════════
    CONSTANTS
@@ -230,37 +229,9 @@ export default function RSVP() {
   /* Prevents double-write to localStorage when user retries after webhook failure */
   const localSavedRef = useRef(false);
 
-  /* Hero circle photo — wired to Firebase Storage */
-  const heroPhotoRef = useRef();
+  /* Hero circle photo — read-only, set via Admin panel */
   const heroPhotoUrl = siteData.media?.rsvp_hero || localStorage.getItem("media_rsvp_hero") || null;
-  const heroPhotoUp = {
-    url: heroPhotoUrl,
-    has: !!heroPhotoUrl,
-    trigger: () => heroPhotoRef.current?.click(),
-    inp: (
-      <input ref={heroPhotoRef} type="file" accept="image/*" style={{ display: "none" }}
-        onChange={async e => {
-          const file = e.target.files?.[0]; if (!file) return; e.target.value = "";
-          try {
-            if (isGithubConfigured()) {
-              const url = await uploadMedia("rsvp_hero", file);
-              updateMedia("rsvp_hero", url);
-            } else {
-              await new Promise(resolve => {
-                const reader = new FileReader();
-                reader.onload = ev => {
-                  try { localStorage.setItem("media_rsvp_hero", ev.target.result); } catch {}
-                  updateMedia("rsvp_hero", ev.target.result);
-                  resolve();
-                };
-                reader.readAsDataURL(file);
-              });
-            }
-          } catch {}
-        }}
-      />
-    ),
-  };
+  const heroPhotoUp = { url: heroPhotoUrl };
 
   /* Refs for scroll-to-error */
   const nomeRef     = useRef(null);
