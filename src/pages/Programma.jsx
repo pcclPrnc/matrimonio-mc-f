@@ -238,13 +238,19 @@ export default function Programma() {
         }
         .prog-mobile-only { display: none; }
 
+        /* Vine image — desktop only */
+        .prog-vine-img { display: block; }
+
         @media (max-width: 700px) {
           .prog-row { grid-template-columns: 48px 1fr; }
           .prog-left-col  { display: none !important; }
           .prog-right-col { padding-left: 20px; }
           .prog-mobile-only { display: block !important; }
-          .prog-vline { left: 24px !important; transform: none !important; }
+          /* Centra la linea CSS sui dot (left=24px = centro della colonna 48px) */
+          .prog-vline { left: 24px !important; transform: translateX(-50%) !important; }
           .prog-vine-deco { display: none !important; }
+          /* Nasconde l'immagine del ramo su mobile */
+          .prog-vine-img { display: none !important; }
         }
       `}</style>
 
@@ -308,22 +314,28 @@ export default function Programma() {
       {/* ══ Timeline ══ */}
       <div style={{ position: "relative", maxWidth: 900, margin: "0 auto", padding: "48px 20px 80px" }}>
 
-        {/* Ramo centrale — immagine base se disponibile, altrimenti linea CSS + bacche SVG */}
+        {/* Ramo centrale */}
         {gp.vineLine?.vis !== false && (
-          vineLineUrl
-            ? <img
+          <>
+            {/* Immagine decorativa — desktop only (nascosta su mobile via CSS) */}
+            {vineLineUrl && (
+              <img
                 src={vineLineUrl}
                 alt=""
-                className="prog-vline"
+                className="prog-vine-img"
                 style={{
                   position: "absolute", top: "7.5%", left: "50%",
-                  transform: "translateX(calc(-50% - 32px))",
+                  transform: "translateX(calc(-50% - 85px))",
                   height: "85%", width: "auto", objectFit: "contain",
-                  zIndex: 0, display: "block", pointerEvents: "none",
+                  zIndex: 0, pointerEvents: "none",
                 }}
                 onError={vineLineCustomUrl ? undefined : () => setVineLineBaseErr(true)}
               />
-            : <>
+            )}
+
+            {/* Linea CSS + bacche — fallback desktop (no immagine) e sempre su mobile */}
+            {!vineLineUrl && (
+              <>
                 <div
                   className="prog-vline"
                   style={{
@@ -346,6 +358,21 @@ export default function Programma() {
                   </div>
                 ))}
               </>
+            )}
+
+            {/* Linea CSS mobile — mostrata solo su mobile quando l'immagine è nascosta */}
+            {vineLineUrl && (
+              <div
+                className="prog-vline"
+                style={{
+                  position: "absolute", top: 0, bottom: 0,
+                  left: "50%", transform: "translateX(-50%)",
+                  width: 2, background: `${C.olive}38`, zIndex: 0,
+                  display: "none",   /* visibile solo via media query mobile */
+                }}
+              />
+            )}
+          </>
         )}
 
         {/* Event rows */}

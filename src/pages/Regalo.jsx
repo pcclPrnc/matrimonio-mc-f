@@ -5,7 +5,8 @@ import { useSite } from "../context/SiteContext";
 
 const B = import.meta.env.BASE_URL;
 const regaloBase = (key) => `${B}media/graphic_regalo_${key}.png`;
-const regaloDivBase = `${B}media/graphic_regalo_dividers.png`;
+/* Usa il file floreale home come base; il pannello admin può sovrascrivere con graphic_regalo_dividers */
+const regaloDivBase = `${B}media/graphic_home_dividers.png`;
 
 export default function Regalo() {
   const { siteData } = useSite();
@@ -99,12 +100,14 @@ export default function Regalo() {
       {/* ── Divider ── */}
       {g.dividers?.vis !== false && (
         <div style={{ display: "flex", justifyContent: "center", margin: "0 0 48px" }}>
-          <ImgSlot
-            customUrl={gfx("dividers").url}
-            base={regaloDivBase}
-            svg={<BotDiv color={C.olive} />}
-            imgStyle={{ maxWidth: "100%", display: "block" }}
-          />
+          <div style={{ width: "38%", padding: "0 16px", boxSizing: "border-box" }}>
+            <ImgSlot
+              customUrl={gfx("dividers").url}
+              base={regaloDivBase}
+              svg={<BotDiv color={C.olive} />}
+              imgStyle={{ width: "100%", display: "block" }}
+            />
+          </div>
         </div>
       )}
 
@@ -228,12 +231,14 @@ export default function Regalo() {
       {/* ── Bottom divider ── */}
       {g.dividers?.vis !== false && (
         <div style={{ display: "flex", justifyContent: "center", paddingBottom: 60 }}>
-          <ImgSlot
-            customUrl={gfx("dividers").url}
-            base={regaloDivBase}
-            svg={<BotDiv color={C.olive} />}
-            imgStyle={{ maxWidth: "100%", display: "block" }}
-          />
+          <div style={{ width: "38%", padding: "0 16px", boxSizing: "border-box" }}>
+            <ImgSlot
+              customUrl={gfx("dividers").url}
+              base={regaloDivBase}
+              svg={<BotDiv color={C.olive} />}
+              imgStyle={{ width: "100%", display: "block" }}
+            />
+          </div>
         </div>
       )}
     </div>

@@ -55,12 +55,14 @@ export default function Home() {
   }, []);
 
   const SepDiv = () => g.dividers?.vis !== false
-    ? <ImgSlot
-        customUrl={gfx("dividers").url}
-        base={homeBase("dividers")}
-        svg={<BotDiv color={C.olive} />}
-        imgStyle={{ width: "75%", maxWidth: "75%", display: "block", margin: "0 auto" }}
-      />
+    ? <div style={{ width: "38%", margin: "0 auto", padding: "0 16px", boxSizing: "border-box" }}>
+        <ImgSlot
+          customUrl={gfx("dividers").url}
+          base={homeBase("dividers")}
+          svg={<BotDiv color={C.olive} />}
+          imgStyle={{ width: "100%", display: "block" }}
+        />
+      </div>
     : null;
 
   return (
@@ -82,30 +84,30 @@ export default function Home() {
           {/* ── Rami ulivo agli angoli ── */}
           <div style={{ position: "absolute", top: 0, left: 0, opacity: .88, pointerEvents: "none" }}>
             <PhotoSlot up={gfx("olSx")} vis={g.olSx?.vis !== false} edit={false}
-              size={248} base={homeBase("olSx")} svg={<OliveB scale={.86} color={C.gold} />} />
+              size={372} base={homeBase("olSx")} svg={<OliveB scale={.86} color={C.gold} />} />
           </div>
           <div style={{ position: "absolute", top: 0, right: 0, opacity: .88, pointerEvents: "none", transform: "scaleX(-1)" }}>
             <PhotoSlot up={gfx("olDx")} vis={g.olDx?.vis !== false} edit={false}
-              size={248} base={homeBase("olDx")} svg={<OliveB flip scale={.86} color={C.gold} />} />
+              size={372} base={homeBase("olDx")} svg={<OliveB flip scale={.86} color={C.gold} />} />
           </div>
 
           {/* ── Cocktail — sinistra, alta (mobile: ridotto) ── */}
           <div style={{ position: "absolute", top: "21%", left: 8, opacity: .56, transform: "rotate(-14deg)", pointerEvents: "none" }}>
             <PhotoSlot up={gfx("cocktail")} vis={g.cocktail?.vis !== false} edit={false}
-              size={isDesktop ? 104 : 72} base={homeBase("cocktail")} svg={<Cocktail color={C.rose} />} />
+              size={isDesktop ? 156 : 108} base={homeBase("cocktail")} svg={<Cocktail color={C.rose} />} />
           </div>
 
           {/* ── Vino — destra, alta (mobile: ridotto) ── */}
           <div style={{ position: "absolute", top: "17%", right: 10, opacity: .60, transform: "rotate(11deg)", pointerEvents: "none" }}>
             <PhotoSlot up={gfx("wineHero")} vis={g.wineHero?.vis !== false} edit={false}
-              size={isDesktop ? 99 : 68} base={homeBase("wineHero")} svg={<Wine color={C.dark} wc={C.rose} />} />
+              size={isDesktop ? 149 : 102} base={homeBase("wineHero")} svg={<Wine color={C.dark} wc={C.rose} />} />
           </div>
 
           {/* ── Anelli — destra, centro (solo desktop) ── */}
           {isDesktop && (
             <div style={{ position: "absolute", top: "44%", right: 85, opacity: .68, transform: "rotate(-7deg)", pointerEvents: "none" }}>
               <PhotoSlot up={gfx("rings")} vis={g.rings?.vis !== false} edit={false}
-                size={144} base={homeBase("rings")} svg={<Rings color={C.gold} />} />
+                size={216} base={homeBase("rings")} svg={<Rings color={C.gold} />} />
             </div>
           )}
 
@@ -113,7 +115,7 @@ export default function Home() {
           {isDesktop && (
             <div style={{ position: "absolute", top: "62%", left: 59, opacity: .55, transform: "rotate(9deg)", pointerEvents: "none" }}>
               <PhotoSlot up={gfx("cake")} vis={g.cake?.vis !== false} edit={false}
-                size={162} base={homeBase("cake")} svg={<Cake color={C.gold} />} />
+                size={243} base={homeBase("cake")} svg={<Cake color={C.gold} />} />
             </div>
           )}
 
@@ -121,7 +123,7 @@ export default function Home() {
           {isDesktop && (
             <div style={{ position: "absolute", top: "65%", right: 24, opacity: .62, transform: "rotate(5deg)", pointerEvents: "none" }}>
               <PhotoSlot up={gfx("grape")} vis={g.grape?.vis !== false} edit={false}
-                size={131} base={homeBase("grape")} svg={<Grape color={C.olive} gc="#9B72CF" />} />
+                size={197} base={homeBase("grape")} svg={<Grape color={C.olive} gc="#9B72CF" />} />
             </div>
           )}
 
@@ -176,7 +178,7 @@ export default function Home() {
           {isDesktop && (
             <div style={{ position: "absolute", top: 22, right: 30, opacity: .58, transform: "rotate(-13deg)", pointerEvents: "none" }}>
               <PhotoSlot up={gfx("moon")} vis={g.moon?.vis !== false} edit={false}
-                size={113} base={homeBase("moon")} svg={<Moon color={C.gold} />} />
+                size={170} base={homeBase("moon")} svg={<Moon color={C.gold} />} />
             </div>
           )}
           <p style={{ fontFamily: FONTS.body, fontStyle: "italic", fontSize: 20, color: C.rose, marginBottom: 46, letterSpacing: ".1em" }}>Mancano ancora…</p>
