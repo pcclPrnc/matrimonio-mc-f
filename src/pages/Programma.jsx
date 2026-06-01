@@ -294,7 +294,7 @@ export default function Programma() {
       )}
 
       {/* ══ Title block ══ */}
-      <div style={{ textAlign: "center", padding: "52px 20px 8px" }}>
+      <div style={{ textAlign: "center", padding: "20px 20px 8px" }}>
         <h1 style={{
           fontFamily: FONTS.serif, fontSize: "clamp(28px,5vw,48px)",
           fontWeight: 400, fontStyle: "italic", color: C.olive, marginBottom: 12,
@@ -324,7 +324,7 @@ export default function Programma() {
                 alt=""
                 className="prog-vine-img"
                 style={{
-                  position: "absolute", top: "-180px", left: "50%",
+                  position: "absolute", top: "-280px", left: "50%",
                   transform: "translateX(calc(-50% - 85px))",
                   height: "75%", width: "auto", objectFit: "contain",
                   zIndex: 0, pointerEvents: "none",
