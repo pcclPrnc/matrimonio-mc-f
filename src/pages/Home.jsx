@@ -56,7 +56,7 @@ export default function Home() {
   }, []);
 
   const SepDiv = () => g.dividers?.vis !== false
-    ? <div style={{ width: "clamp(200px, 38vw, 380px)", margin: "0 auto", padding: "0 16px", boxSizing: "border-box" }}>
+    ? <div style={{ width: "clamp(270px, 44vw, 437px)", margin: "0 auto", padding: "0 16px", boxSizing: "border-box" }}>
         <ImgSlot
           customUrl={gfx("dividers").url}
           base={homeBase("dividers")}

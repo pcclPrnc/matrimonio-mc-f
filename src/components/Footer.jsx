@@ -22,14 +22,14 @@ export default function Footer() {
     }}>
       <div style={{ display: "flex", justifyContent: "center", marginBottom: 14, opacity: .82 }}>
         <PhotoSlot up={gfx("moon")} vis={gf.moon?.vis !== false} edit={false}
-          size={67} base={base("moon")} svg={<Moon color={C.gold} />} />
+          size={130} base={base("moon")} svg={<Moon color={C.gold} />} />
       </div>
       <p style={{ fontFamily: FONTS.script, fontSize: "clamp(20px,3.5vw,30px)", color: C.olive, lineHeight: 1.4 }}>
         Con amore, {siteData.nomi}
       </p>
       <div style={{ display: "flex", justifyContent: "center", margin: "13px 0", opacity: .55 }}>
         <PhotoSlot up={gfx("rings")} vis={gf.rings?.vis !== false} edit={false}
-          size={67} base={base("rings")} svg={<Rings color={C.gold} />} />
+          size={130} base={base("rings")} svg={<Rings color={C.gold} />} />
       </div>
       <p style={{ fontFamily: FONTS.body, fontSize: 11, color: C.dark, opacity: .35, letterSpacing: ".24em", textTransform: "uppercase" }}>
         {siteData.data} · Roma
