@@ -312,7 +312,7 @@ export default function Programma() {
       </div>
 
       {/* ══ Timeline ══ */}
-      <div style={{ position: "relative", maxWidth: 900, margin: "0 auto", padding: "48px 20px 80px" }}>
+      <div style={{ position: "relative", maxWidth: 900, margin: "0 auto", padding: "240px 20px 80px" }}>
 
         {/* Ramo centrale */}
         {gp.vineLine?.vis !== false && (
@@ -324,9 +324,9 @@ export default function Programma() {
                 alt=""
                 className="prog-vine-img"
                 style={{
-                  position: "absolute", top: "7.5%", left: "50%",
+                  position: "absolute", top: "0px", left: "50%",
                   transform: "translateX(calc(-50% - 85px))",
-                  height: "85%", width: "auto", objectFit: "contain",
+                  height: "75%", width: "auto", objectFit: "contain",
                   zIndex: 0, pointerEvents: "none",
                 }}
                 onError={vineLineCustomUrl ? undefined : () => setVineLineBaseErr(true)}
