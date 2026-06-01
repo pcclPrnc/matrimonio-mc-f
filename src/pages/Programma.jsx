@@ -254,41 +254,14 @@ export default function Programma() {
         }
       `}</style>
 
-      {/* Hidden file inputs */}
-      <span>{heroImg.inp}</span>
-      <span>{polaroidImg.inp}</span>
-
-      {/* ══ Hero photo placeholder ══ */}
-      {gp.heroImg?.vis !== false && (
-      <div style={{ paddingTop: 80, padding: "80px 20px 0" }}>
-        <div
-          onClick={heroImg.trigger}
-          style={{
-            width: "100%", height: 224, maxWidth: 900, margin: "0 auto",
-            border: `2px dashed ${C.olive}55`, borderRadius: 12, overflow: "hidden",
-            cursor: "pointer", position: "relative", background: `${C.olive}06`,
-          }}
-        >
-          {heroImg.url
-            ? <img src={heroImg.url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
-            : (
-              <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10 }}>
-                <span style={{ fontSize: 28 }}>📷</span>
-                <span style={{ fontFamily: FONTS.body, fontSize: 13, color: C.olive, opacity: .42, letterSpacing: ".16em", textTransform: "uppercase" }}>
-                  Aggiungi foto location
-                </span>
-              </div>
-            )
-          }
-          <div
-            style={{ position: "absolute", inset: 0, background: "rgba(61,90,62,.42)", display: "flex", alignItems: "center", justifyContent: "center", opacity: 0, transition: "opacity .2s" }}
-            onMouseEnter={e => e.currentTarget.style.opacity = 1}
-            onMouseLeave={e => e.currentTarget.style.opacity = 0}
-          >
-            <span style={{ color: "#fff", fontFamily: FONTS.body, fontSize: 13, letterSpacing: ".14em", textTransform: "uppercase" }}>
-              {heroImg.url ? "🔄 Cambia foto" : "📷 Carica foto"}
-            </span>
-          </div>
+      {/* ══ Hero photo ══ */}
+      {gp.heroImg?.vis !== false && heroImg.url && (
+      <div style={{ padding: "80px 20px 0" }}>
+        <div style={{
+          width: "100%", height: 224, maxWidth: 900, margin: "0 auto",
+          borderRadius: 12, overflow: "hidden", position: "relative",
+        }}>
+          <img src={heroImg.url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
         </div>
       </div>
       )}
@@ -423,15 +396,14 @@ export default function Programma() {
               </div>
 
               {/* ── Polaroid slot between event 4 (Discorsi) and 5 (Torta) ── */}
-              {i === 3 && (
+              {i === 3 && polaroidImg.url && (
                 <div style={{ display: "flex", justifyContent: "center", margin: "-16px 0 56px", position: "relative", zIndex: 1 }}>
                   <div
-                    onClick={polaroidImg.trigger}
                     style={{
                       width: 320, background: "#fff",
                       boxShadow: "0 8px 32px rgba(0,0,0,.11), 0 2px 8px rgba(0,0,0,.07)",
                       borderRadius: 3, padding: "14px 14px 46px",
-                      cursor: "pointer", position: "relative",
+                      position: "relative",
                       transition: "transform .35s, box-shadow .35s",
                     }}
                     onMouseEnter={e => {
@@ -443,28 +415,10 @@ export default function Programma() {
                       e.currentTarget.style.boxShadow = "0 8px 32px rgba(0,0,0,.11), 0 2px 8px rgba(0,0,0,.07)";
                     }}
                   >
-                    {polaroidImg.url
-                      ? <img src={polaroidImg.url} alt="" style={{ width: "100%", height: 220, objectFit: "cover", display: "block", borderRadius: 1 }} />
-                      : (
-                        <div style={{ width: "100%", height: 220, background: C.cream, borderRadius: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8 }}>
-                          <span style={{ fontSize: 26 }}>📷</span>
-                          <span style={{ fontFamily: FONTS.body, fontSize: 11, color: C.olive, opacity: .38, letterSpacing: ".14em", textTransform: "uppercase" }}>Clicca per caricare</span>
-                        </div>
-                      )
-                    }
+                    <img src={polaroidImg.url} alt="" style={{ width: "100%", height: 220, objectFit: "cover", display: "block", borderRadius: 1 }} />
                     <p style={{ textAlign: "center", marginTop: 10, fontFamily: FONTS.script, fontSize: 17, color: C.dark, opacity: .52 }}>
                       📷 Momento speciale
                     </p>
-                    {/* Upload overlay */}
-                    <div
-                      style={{ position: "absolute", inset: 0, borderRadius: 3, background: "rgba(61,90,62,.38)", display: "flex", alignItems: "center", justifyContent: "center", opacity: 0, transition: "opacity .2s" }}
-                      onMouseEnter={e => e.currentTarget.style.opacity = 1}
-                      onMouseLeave={e => e.currentTarget.style.opacity = 0}
-                    >
-                      <span style={{ color: "#fff", fontFamily: FONTS.body, fontSize: 13, letterSpacing: ".12em", textTransform: "uppercase" }}>
-                        {polaroidImg.url ? "🔄 Cambia foto" : "📷 Carica foto"}
-                      </span>
-                    </div>
                   </div>
                 </div>
               )}

@@ -176,8 +176,6 @@ export default function FAQ() {
       color: C.dark,
       paddingBottom: 80,
     }}>
-      {polaroidUp.inp}
-
       {/* ── HERO ─────────────────────────────────────────── */}
       <section style={{
         paddingTop: 110,
@@ -236,79 +234,26 @@ export default function FAQ() {
             </div>
           </div>
 
-          {/* ── Right: photo slot (stile Home) ── */}
+          {/* ── Right: photo slot ── */}
+          {polaroidUp.url && (
           <div
-            onClick={polaroidUp.trigger}
             style={{
               flex: "0 0 220px",
               width: 220,
               aspectRatio: "3/4",
-              border: polaroidUp.url ? "none" : `2px dashed ${C.olive}55`,
               borderRadius: 10,
               overflow: "hidden",
-              background: polaroidUp.url ? "transparent" : `${C.olive}06`,
-              cursor: "pointer",
               position: "relative",
               alignSelf: "flex-start",
             }}
           >
-            {polaroidUp.url
-              ? <img
-                  src={polaroidUp.url}
-                  alt=""
-                  style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-                />
-              : (
-                <div style={{
-                  width: "100%", height: "100%",
-                  display: "flex", flexDirection: "column",
-                  alignItems: "center", justifyContent: "center", gap: 10,
-                }}>
-                  <span style={{ fontSize: 30 }}>📷</span>
-                  <span style={{
-                    fontFamily: FONTS.body, fontSize: 12, color: C.olive,
-                    opacity: .42, letterSpacing: ".18em", textTransform: "uppercase",
-                    textAlign: "center", padding: "0 12px",
-                  }}>
-                    Aggiungi foto
-                  </span>
-                </div>
-              )
-            }
-
-            {/* Hover overlay when photo loaded */}
-            {polaroidUp.url && (
-              <div
-                style={{
-                  position: "absolute", inset: 0,
-                  background: "rgba(61,90,62,.5)",
-                  display: "flex", flexDirection: "column",
-                  alignItems: "center", justifyContent: "center", gap: 8,
-                  opacity: 0, transition: "opacity .2s",
-                }}
-                onMouseEnter={e => e.currentTarget.style.opacity = 1}
-                onMouseLeave={e => e.currentTarget.style.opacity = 0}
-              >
-                <span style={{ fontSize: 22 }}>🔄</span>
-                <span style={{
-                  fontFamily: FONTS.body, fontSize: 11, color: "#F5F0E8",
-                  letterSpacing: ".14em", textTransform: "uppercase",
-                }}>
-                  Cambia foto
-                </span>
-                <button
-                  onClick={e => { e.stopPropagation(); polaroidUp.clear(); }}
-                  style={{
-                    background: "rgba(255,255,255,.2)", border: "1px solid rgba(255,255,255,.5)",
-                    color: "#fff", fontSize: 10, padding: "2px 8px", borderRadius: 2,
-                    cursor: "pointer", fontFamily: FONTS.body, marginTop: 4,
-                  }}
-                >
-                  Rimuovi
-                </button>
-              </div>
-            )}
+            <img
+              src={polaroidUp.url}
+              alt=""
+              style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+            />
           </div>
+          )}
         </div>
       </section>
 

@@ -122,39 +122,14 @@ function ProgressBar({ step, presenza, C }) {
    CIRCLE PHOTO SLOT
    ═══════════════════════════════════════════════════════════ */
 function CirclePhoto({ up, C }) {
+  if (!up.url) return null;
   return (
     <div style={{ display: "flex", justifyContent: "center", marginBottom: 36 }}>
-      {up.inp}
-      <div onClick={up.trigger} style={{
+      <div style={{
         width: 180, height: 180, borderRadius: "50%", flexShrink: 0,
-        border: up.url ? "none" : `2px dashed ${C.olive}55`,
-        background: up.url ? "transparent" : `${C.olive}06`,
-        overflow: "hidden", cursor: "pointer", position: "relative",
-        display: "flex", flexDirection: "column",
-        alignItems: "center", justifyContent: "center",
+        overflow: "hidden", position: "relative",
       }}>
-        {up.url
-          ? <img src={up.url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-          : <>
-              <span style={{ fontSize: 34, marginBottom: 8 }}>📷</span>
-              <span style={{ fontFamily: FONTS.body, fontSize: 11, color: C.olive, opacity: .42, letterSpacing: ".16em", textTransform: "uppercase", textAlign: "center", padding: "0 24px" }}>
-                Aggiungi<br/>foto
-              </span>
-            </>
-        }
-        {up.url && (
-          <div
-            style={{ position: "absolute", inset: 0, background: "rgba(61,90,62,.5)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 6, opacity: 0, transition: "opacity .2s" }}
-            onMouseEnter={e => e.currentTarget.style.opacity = 1}
-            onMouseLeave={e => e.currentTarget.style.opacity = 0}
-          >
-            <span style={{ fontSize: 20 }}>🔄</span>
-            <button onClick={e => { e.stopPropagation(); up.clear(); }}
-              style={{ background: "rgba(255,255,255,.2)", border: "1px solid rgba(255,255,255,.5)", color: "#fff", fontSize: 10, padding: "2px 10px", borderRadius: 2, cursor: "pointer", fontFamily: FONTS.body }}>
-              Rimuovi
-            </button>
-          </div>
-        )}
+        <img src={up.url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
       </div>
     </div>
   );
