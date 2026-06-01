@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { COLORS, FONTS } from "../designSystem.jsx";
 import { useSite } from "../context/SiteContext";
 

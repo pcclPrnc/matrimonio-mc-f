@@ -263,8 +263,8 @@ export default function Programma() {
                 alt=""
                 className="prog-vine-img"
                 style={{
-                  position: "absolute", top: "-75px", left: "50%",
-                  transform: "translateX(calc(-50% + 5px))",
+                  position: "absolute", top: "-68px", left: "50%",
+                  transform: "translateX(calc(-50% + 14px))",
                   height: "75%", width: "auto", objectFit: "contain",
                   zIndex: 0, pointerEvents: "none",
                 }}
