@@ -5,7 +5,7 @@ import {
 import { useSite } from "../context/SiteContext";
 import { SITE_DEFAULTS } from "../context/SiteContext";
 import { db, auth, CONFIGURED } from "../firebase";
-import { ref, onValue } from "firebase/database";
+import { ref, onValue, remove } from "firebase/database";
 import { signInAnonymously, signOut } from "firebase/auth";
 import { uploadMedia, deleteMedia, isGithubConfigured } from "../services/githubApi";
 
@@ -570,7 +570,14 @@ function SecRSVP() {
     URL.revokeObjectURL(url);
   };
 
-  const clearAll = () => { if (window.confirm("Eliminare tutte le risposte?")) { localStorage.removeItem("rsvp_risposte"); setRisposte([]); } };
+  const clearAll = async () => {
+    if (!window.confirm("Eliminare tutte le risposte RSVP?\n\nQuesta azione è irreversibile e cancella anche i dati su Firebase.")) return;
+    localStorage.removeItem("rsvp_risposte");
+    setRisposte([]);
+    if (CONFIGURED) {
+      try { await remove(ref(db, "rsvpResponses")); } catch (e) { console.error("Errore eliminazione Firebase:", e); }
+    }
+  };
 
   const TABLE_COLS = ["Nome","Cognome","Presenza","Allergie/Dieta","Note Menu","Messaggio","Aggiunto da","Data"];
 
