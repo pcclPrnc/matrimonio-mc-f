@@ -542,13 +542,21 @@ function SecRSVP() {
   const presenti = risposte.filter(r => r.presenza === true).length;
   const assenti  = risposte.filter(r => r.presenza === false).length;
 
+  /* Firebase può restituire gli array come oggetti indicizzati {0:"x",1:"y"}.
+     Questa helper normalizza qualsiasi forma a un array di stringhe. */
+  const toArr = (v) => {
+    if (!v) return [];
+    if (Array.isArray(v)) return v;
+    return Object.values(v);
+  };
+
   const exportCSV = () => {
-    const hdr = ["Nome","Cognome","Presenza","Allergie/Dieta","Note Menù","Messaggio","Aggiunto da","Data"];
+    const hdr = ["Nome","Cognome","Presenza","Allergie/Dieta","Note Menu","Messaggio","Aggiunto da","Data"];
     const rows = risposte.map(r => [
       r.nome ?? "",
       r.cognome ?? "",
       r.presenza ? "Sì" : "No",
-      (r.allergie ?? []).join(", "),
+      toArr(r.allergie).join(", "),
       r.note ?? "",
       (r.messaggio ?? "").replace(/\n/g, " "),
       r.aggiunto_da ?? "",
@@ -564,7 +572,7 @@ function SecRSVP() {
 
   const clearAll = () => { if (window.confirm("Eliminare tutte le risposte?")) { localStorage.removeItem("rsvp_risposte"); setRisposte([]); } };
 
-  const TABLE_COLS = ["Nome","Cognome","Presenza","Allergie/Dieta","Note Menù","Messaggio","Aggiunto da","Data"];
+  const TABLE_COLS = ["Nome","Cognome","Presenza","Allergie/Dieta","Note Menu","Messaggio","Aggiunto da","Data"];
 
   return (
     <AdminSectionCard title="📋 Risposte RSVP">
@@ -599,7 +607,7 @@ function SecRSVP() {
               <tbody>
                 {risposte.map((r, i) => {
                   const isCompanion = !!r.aggiunto_da;
-                  const allergie = (r.allergie ?? []).join(", ");
+                  const allergie = toArr(r.allergie).join(", ");
                   const rowBg = isCompanion
                     ? "#F8F5FF"                          // viola tenue per accompagnatori
                     : r.presenza ? "#F0FDF4" : "#FDF2F4"; // verde/rosso per rispondenti
