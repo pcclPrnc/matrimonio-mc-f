@@ -233,18 +233,18 @@ export default function Home() {
             </div>
 
             {/* Card RSVP */}
-            <div className="wc-card" style={{ background: C.card, border: `1px solid ${C.rose}28`, borderRadius: 10, padding: "38px 24px", display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: 13, boxShadow: "0 4px 18px rgba(212,132,154,.06)" }}>
-              <PhotoSlot up={gfx("rsvpCard")} vis={g.rsvpCard?.vis !== false} edit={false} size={105} base={homeBase("rsvpCard")} svg={<HeartSVG color={C.rose} />} />
-              <h3 style={{ fontFamily: FONTS.serif, fontSize: 20, color: C.rose, fontWeight: 400, fontStyle: "italic" }}>RSVP</h3>
-              <div style={{ height: 1, width: 38, background: C.rose, opacity: .4 }} />
+            <div className="wc-card" style={{ background: C.card, border: `1px solid ${C.olive}1A`, borderRadius: 10, padding: "38px 24px", display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: 13, boxShadow: "0 4px 18px rgba(0,0,0,.05)" }}>
+              <PhotoSlot up={gfx("rsvpCard")} vis={g.rsvpCard?.vis !== false} edit={false} size={105} base={homeBase("rsvpCard")} svg={<HeartSVG color={C.olive} />} />
+              <h3 style={{ fontFamily: FONTS.serif, fontSize: 20, color: C.olive, fontWeight: 400, fontStyle: "italic" }}>RSVP</h3>
+              <div style={{ height: 1, width: 38, background: C.gold, opacity: .5 }} />
               <div style={{ fontFamily: FONTS.body, fontSize: 15, lineHeight: 1.8, color: C.dark }}>
                 Ci farebbe immensamente piacere<br />averti con noi!<br />
-                <span style={{ fontFamily: FONTS.serif, fontStyle: "italic", color: C.rose, fontSize: 16 }}>
+                <span style={{ fontFamily: FONTS.serif, fontStyle: "italic", color: C.olive, fontSize: 16 }}>
                   Conferma entro il {siteData.scadenzaRsvp}
                 </span>
               </div>
               <Link to="/rsvp" className="wc-nl"
-                style={{ fontFamily: FONTS.body, fontSize: 11, letterSpacing: ".16em", textTransform: "uppercase", color: C.rose, textDecoration: "none", borderBottom: `1px solid ${C.rose}44`, paddingBottom: 2 }}>
+                style={{ fontFamily: FONTS.body, fontSize: 11, letterSpacing: ".16em", textTransform: "uppercase", color: C.olive, textDecoration: "none", borderBottom: `1px solid ${C.olive}44`, paddingBottom: 2 }}>
                 Rispondi qui →
               </Link>
             </div>
