@@ -18,7 +18,7 @@ const ALLERGIE_LIST = [
   { key: "vegano",     label: "Vegano",             emoji: "🌱" },
 ];
 
-const EMPTY_PERSONA = () => ({ nome: "", note: "", allergie: [] });
+const EMPTY_PERSONA = () => ({ nome: "", cognome: "", note: "", allergie: [] });
 
 const INITIAL_FORM = {
   nome: "", cognome: "", presenza: null,
@@ -336,7 +336,7 @@ export default function RSVP() {
         rows.push({
           timestamp:   ts,
           nome:        p.nome || `Accompagnatore ${i}`,
-          cognome:     "",
+          cognome:     p.cognome || "",
           presenza:    true,
           nPersone:    1,
           allergie:    p.allergie ?? [],
@@ -600,7 +600,7 @@ export default function RSVP() {
               const isMain = idx === 0;
               const nomeDisplay = isMain
                 ? `${formData.nome} ${formData.cognome}`.trim()
-                : persona.nome || `Accompagnatore ${idx}`;
+                : [persona.nome, persona.cognome].filter(Boolean).join(" ") || `Accompagnatore ${idx}`;
               return (
                 <div key={idx} style={{
                   marginBottom: 40, paddingBottom: 32,
@@ -616,17 +616,28 @@ export default function RSVP() {
                     </h3>
                   </div>
 
-                  {/* Nome accompagnatore */}
+                  {/* Nome e Cognome accompagnatore */}
                   {!isMain && (
-                    <Field label="Nome accompagnatore" C={C}>
-                      <input
-                        className="rsvp-input"
-                        value={persona.nome}
-                        onChange={e => setPersona(idx, "nome", e.target.value)}
-                        placeholder="Nome e Cognome"
-                        style={inputBase(C, false)}
-                      />
-                    </Field>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 20 }}>
+                      <Field label="Nome" C={C}>
+                        <input
+                          className="rsvp-input"
+                          value={persona.nome}
+                          onChange={e => setPersona(idx, "nome", e.target.value)}
+                          placeholder="Nome"
+                          style={inputBase(C, false)}
+                        />
+                      </Field>
+                      <Field label="Cognome" C={C}>
+                        <input
+                          className="rsvp-input"
+                          value={persona.cognome ?? ""}
+                          onChange={e => setPersona(idx, "cognome", e.target.value)}
+                          placeholder="Cognome"
+                          style={inputBase(C, false)}
+                        />
+                      </Field>
+                    </div>
                   )}
 
                   {/* Note menu */}
