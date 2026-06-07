@@ -538,17 +538,20 @@ function SecRSVP() {
     }
   };
 
+  // Ogni riga = 1 persona; le righe con aggiunto_da sono accompagnatori
   const presenti = risposte.filter(r => r.presenza === true).length;
   const assenti  = risposte.filter(r => r.presenza === false).length;
 
   const exportCSV = () => {
-    const hdr = ["Nome","Cognome","Presenza","N° Ospiti","Allergie","Messaggio","Data"];
+    const hdr = ["Nome","Cognome","Presenza","Allergie/Dieta","Note Menù","Messaggio","Aggiunto da","Data"];
     const rows = risposte.map(r => [
-      r.nome, r.cognome,
+      r.nome ?? "",
+      r.cognome ?? "",
       r.presenza ? "Sì" : "No",
-      r.nPersone ?? 0,
-      (r.persone ?? []).map(p => p.allergie?.join("+")).join("; "),
+      (r.allergie ?? []).join(", "),
+      r.note ?? "",
       (r.messaggio ?? "").replace(/\n/g, " "),
+      r.aggiunto_da ?? "",
       r.timestamp ? new Date(r.timestamp).toLocaleString("it-IT") : "",
     ]);
     const csv = [hdr, ...rows].map(row => row.map(v => `"${String(v ?? "").replace(/"/g, '""')}"`).join(",")).join("\n");
@@ -561,16 +564,18 @@ function SecRSVP() {
 
   const clearAll = () => { if (window.confirm("Eliminare tutte le risposte?")) { localStorage.removeItem("rsvp_risposte"); setRisposte([]); } };
 
+  const TABLE_COLS = ["Nome","Cognome","Presenza","Allergie/Dieta","Note Menù","Messaggio","Aggiunto da","Data"];
+
   return (
     <AdminSectionCard title="📋 Risposte RSVP">
       <div style={{ background: A.accentLight, border: `1px solid ${A.accent}44`, borderRadius: 4, padding: "8px 12px", marginBottom: 14, fontFamily: A.ff, fontSize: 12, color: A.accent }}>
         {CONFIGURED ? "✓ Firebase attivo — le risposte RSVP sono salvate nel database condiviso." : "🔧 Firebase non configurato — le risposte sono salvate solo in questo browser."}
       </div>
-      {/* Counters */}
+      {/* Counters — ogni riga = 1 persona */}
       <div style={{ display: "flex", gap: 12, marginBottom: 20, flexWrap: "wrap" }}>
-        <ABadge color={A.success}>✓ {presenti} confermati</ABadge>
+        <ABadge color={A.success}>✓ {presenti} presenti</ABadge>
         <ABadge color={A.danger}>✗ {assenti} assenti</ABadge>
-        <ABadge color={A.muted}>⏳ {risposte.length} totali</ABadge>
+        <ABadge color={A.muted}>⏳ {risposte.length} righe totali</ABadge>
       </div>
       {/* Actions */}
       <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
@@ -586,24 +591,29 @@ function SecRSVP() {
             <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: A.ff, fontSize: 12 }}>
               <thead>
                 <tr style={{ background: "#F3F4F6" }}>
-                  {["Nome","Cognome","Presenza","Ospiti","Allergie","Messaggio","Data"].map(h => (
-                    <th key={h} style={{ padding: "8px 10px", textAlign: "left", fontWeight: 600, color: A.muted, letterSpacing: ".04em", borderBottom: `1px solid ${A.border}` }}>{h}</th>
+                  {TABLE_COLS.map(h => (
+                    <th key={h} style={{ padding: "8px 10px", textAlign: "left", fontWeight: 600, color: A.muted, letterSpacing: ".04em", borderBottom: `1px solid ${A.border}`, whiteSpace: "nowrap" }}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {risposte.map((r, i) => {
-                  const allergie = (r.persone ?? []).flatMap(p => p.allergie ?? []).join(", ");
+                  const isCompanion = !!r.aggiunto_da;
+                  const allergie = (r.allergie ?? []).join(", ");
+                  const rowBg = isCompanion
+                    ? "#F8F5FF"                          // viola tenue per accompagnatori
+                    : r.presenza ? "#F0FDF4" : "#FDF2F4"; // verde/rosso per rispondenti
                   return (
-                    <tr key={i} style={{ background: r.presenza ? "#F0FDF4" : "#FDF2F4" }}>
-                      <td style={{ padding: "8px 10px", borderBottom: `1px solid ${A.border}` }}>{r.nome}</td>
-                      <td style={{ padding: "8px 10px", borderBottom: `1px solid ${A.border}` }}>{r.cognome}</td>
+                    <tr key={i} style={{ background: rowBg }}>
+                      <td style={{ padding: "8px 10px", borderBottom: `1px solid ${A.border}`, whiteSpace: "nowrap" }}>{r.nome || "—"}</td>
+                      <td style={{ padding: "8px 10px", borderBottom: `1px solid ${A.border}`, whiteSpace: "nowrap" }}>{r.cognome || "—"}</td>
                       <td style={{ padding: "8px 10px", borderBottom: `1px solid ${A.border}` }}>
                         <ABadge color={r.presenza ? A.success : A.danger}>{r.presenza ? "Sì ✓" : "No ✗"}</ABadge>
                       </td>
-                      <td style={{ padding: "8px 10px", borderBottom: `1px solid ${A.border}` }}>{r.nPersone ?? 0}</td>
-                      <td style={{ padding: "8px 10px", borderBottom: `1px solid ${A.border}`, maxWidth: 120, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{allergie || "—"}</td>
+                      <td style={{ padding: "8px 10px", borderBottom: `1px solid ${A.border}`, maxWidth: 140, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{allergie || "—"}</td>
+                      <td style={{ padding: "8px 10px", borderBottom: `1px solid ${A.border}`, maxWidth: 160, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.note || "—"}</td>
                       <td style={{ padding: "8px 10px", borderBottom: `1px solid ${A.border}`, maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.messaggio || "—"}</td>
+                      <td style={{ padding: "8px 10px", borderBottom: `1px solid ${A.border}`, maxWidth: 160, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: A.muted, fontStyle: "italic" }}>{r.aggiunto_da || "—"}</td>
                       <td style={{ padding: "8px 10px", borderBottom: `1px solid ${A.border}`, whiteSpace: "nowrap", color: A.muted }}>{r.timestamp ? new Date(r.timestamp).toLocaleDateString("it-IT") : "—"}</td>
                     </tr>
                   );
