@@ -69,13 +69,13 @@ function EventCard({ event, isRight, C, anim, customUrl }) {
   /* Fallback chain: admin upload → static base PNG → original SVG */
   const iconContent = (() => {
     if (customUrl) {
-      return <img src={customUrl} alt="" style={{ width: 72, height: 72, objectFit: "contain" }} />;
+      return <img src={customUrl} alt="" style={{ width: 94, height: 94, objectFit: "contain" }} />;
     }
     if (!baseErr) {
       return (
         <img
           src={progBase(event.icona)} alt=""
-          style={{ width: 72, height: 72, objectFit: "contain" }}
+          style={{ width: 94, height: 94, objectFit: "contain" }}
           onError={() => setBaseErr(true)}
         />
       );
