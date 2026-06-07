@@ -309,19 +309,23 @@ export default function RSVP() {
     const ts = new Date().toISOString();
     const mainPersona = formData.presenza ? (formData.persone?.[0] ?? {}) : {};
 
-    /* ── Costruisce una riga per persona ── */
+    /* ── Costruisce una riga per persona ────────────────────────────
+       Ogni riga = 1 persona, nPersone = 1 per tutte le righe.
+       Una sola fetch con { rows: [...] } evita problemi di concorrenza
+       su Apps Script.
+    ─────────────────────────────────────────────────────────────── */
     const rows = [];
 
     // Riga 1: rispondente principale
     rows.push({
-      timestamp: ts,
-      nome:      formData.nome,
-      cognome:   formData.cognome,
-      presenza:  formData.presenza,
-      nPersone:  formData.presenza ? formData.nPersone : 0,
-      allergie:  formData.presenza ? (mainPersona.allergie ?? []) : [],
-      note:      formData.presenza ? (mainPersona.note ?? "")      : "",
-      messaggio: formData.messaggio,
+      timestamp:   ts,
+      nome:        formData.nome,
+      cognome:     formData.cognome,
+      presenza:    formData.presenza,
+      nPersone:    1,
+      allergie:    formData.presenza ? (mainPersona.allergie ?? []) : [],
+      note:        formData.presenza ? (mainPersona.note ?? "")      : "",
+      messaggio:   formData.messaggio,
       aggiunto_da: "",
     });
 
@@ -330,32 +334,30 @@ export default function RSVP() {
       for (let i = 1; i < formData.persone.length; i++) {
         const p = formData.persone[i];
         rows.push({
-          timestamp: ts,
-          nome:      p.nome || `Accompagnatore ${i}`,
-          cognome:   "",
-          presenza:  true,
-          nPersone:  null,
-          allergie:  p.allergie ?? [],
-          note:      p.note ?? "",
-          messaggio: "",
+          timestamp:   ts,
+          nome:        p.nome || `Accompagnatore ${i}`,
+          cognome:     "",
+          presenza:    true,
+          nPersone:    1,
+          allergie:    p.allergie ?? [],
+          note:        p.note ?? "",
+          messaggio:   "",
           aggiunto_da: `Aggiunto da ${formData.nome} ${formData.cognome}`,
         });
       }
     }
 
-    /* ── Google Sheets webhook: una chiamata per riga ── */
+    /* ── Google Sheets webhook: UNA sola chiamata con tutte le righe ── */
     const webhookUrl = (siteData.webhookUrl || localStorage.getItem("admin_webhook") || "").trim();
 
     if (webhookUrl) {
       try {
-        for (const row of rows) {
-          await fetch(webhookUrl, {
-            method:  "POST",
-            mode:    "no-cors",
-            headers: { "Content-Type": "text/plain;charset=utf-8" },
-            body:    JSON.stringify(row),
-          });
-        }
+        await fetch(webhookUrl, {
+          method:  "POST",
+          mode:    "no-cors",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body:    JSON.stringify({ rows }),
+        });
       } catch {
         if (!localSavedRef.current) {
           try {
