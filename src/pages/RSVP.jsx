@@ -306,37 +306,61 @@ export default function RSVP() {
     setLoading(true);
     setSendError("");
 
-    const entry = {
-      timestamp: new Date().toISOString(),
+    const ts = new Date().toISOString();
+    const mainPersona = formData.presenza ? (formData.persone?.[0] ?? {}) : {};
+
+    /* ── Costruisce una riga per persona ── */
+    const rows = [];
+
+    // Riga 1: rispondente principale
+    rows.push({
+      timestamp: ts,
       nome:      formData.nome,
       cognome:   formData.cognome,
       presenza:  formData.presenza,
       nPersone:  formData.presenza ? formData.nPersone : 0,
-      persone:   formData.presenza ? formData.persone  : [],
+      allergie:  formData.presenza ? (mainPersona.allergie ?? []) : [],
+      note:      formData.presenza ? (mainPersona.note ?? "")      : "",
       messaggio: formData.messaggio,
-    };
+      aggiunto_da: "",
+    });
 
-    /* ── Google Sheets webhook ── */
+    // Righe aggiuntive: accompagnatori (persone[1+])
+    if (formData.presenza && formData.persone && formData.persone.length > 1) {
+      for (let i = 1; i < formData.persone.length; i++) {
+        const p = formData.persone[i];
+        rows.push({
+          timestamp: ts,
+          nome:      p.nome || `Accompagnatore ${i}`,
+          cognome:   "",
+          presenza:  true,
+          nPersone:  null,
+          allergie:  p.allergie ?? [],
+          note:      p.note ?? "",
+          messaggio: "",
+          aggiunto_da: `Aggiunto da ${formData.nome} ${formData.cognome}`,
+        });
+      }
+    }
+
+    /* ── Google Sheets webhook: una chiamata per riga ── */
     const webhookUrl = (siteData.webhookUrl || localStorage.getItem("admin_webhook") || "").trim();
 
     if (webhookUrl) {
       try {
-        /* Use text/plain to avoid CORS preflight (Apps Script limitation).
-           The body is still valid JSON — Apps Script reads it with JSON.parse(). */
-        await fetch(webhookUrl, {
-          method:  "POST",
-          mode:    "no-cors",          // opaque response — no preflight triggered
-          headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body:    JSON.stringify(entry),
-        });
-        /* no-cors: response is opaque so we can't check res.ok.
-           If fetch() didn't throw, the request was dispatched. */
+        await Promise.all(rows.map(row =>
+          fetch(webhookUrl, {
+            method:  "POST",
+            mode:    "no-cors",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body:    JSON.stringify(row),
+          })
+        ));
       } catch {
-        /* Network error — save locally so data isn't lost, then surface error. */
         if (!localSavedRef.current) {
           try {
             const prev = JSON.parse(localStorage.getItem("rsvp_risposte") || "[]");
-            localStorage.setItem("rsvp_risposte", JSON.stringify([...prev, entry]));
+            localStorage.setItem("rsvp_risposte", JSON.stringify([...prev, ...rows]));
             localSavedRef.current = true;
           } catch {}
         }
@@ -349,13 +373,15 @@ export default function RSVP() {
       }
     }
 
-    /* ── Save to Firebase and localStorage ── */
+    /* ── Salva su Firebase e localStorage (una voce per riga) ── */
     if (CONFIGURED) {
-      try { await push(ref(db, "rsvpResponses"), entry); } catch {}
+      try {
+        await Promise.all(rows.map(row => push(ref(db, "rsvpResponses"), row)));
+      } catch {}
     }
     try {
       const prev = JSON.parse(localStorage.getItem("rsvp_risposte") || "[]");
-      localStorage.setItem("rsvp_risposte", JSON.stringify([...prev, entry]));
+      localStorage.setItem("rsvp_risposte", JSON.stringify([...prev, ...rows]));
       sessionStorage.removeItem("rsvp_draft");
     } catch {}
 
