@@ -212,11 +212,15 @@ export default function Programma() {
           .prog-left-col  { display: none !important; }
           .prog-right-col { padding-left: 20px; }
           .prog-mobile-only { display: block !important; }
-          /* Centra la linea CSS sui dot (left=24px = centro della colonna 48px) */
-          .prog-vline { left: 24px !important; transform: translateX(-50%) !important; }
           .prog-vine-deco { display: none !important; }
-          /* Nasconde l'immagine del ramo su mobile */
-          .prog-vine-img { display: none !important; }
+          /* Vine su mobile: tronco (57.85% = 372/643px) centrato sui pallini (left=44px) */
+          .prog-vine-img {
+            display: block !important;
+            left: 44px !important;
+            transform: translateX(-57.85%) !important;
+            height: 82% !important;
+            top: -80px !important;
+          }
         }
       `}</style>
 
