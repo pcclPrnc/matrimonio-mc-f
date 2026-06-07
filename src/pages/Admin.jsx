@@ -5,7 +5,7 @@ import {
 import { useSite } from "../context/SiteContext";
 import { SITE_DEFAULTS } from "../context/SiteContext";
 import { db, auth, CONFIGURED } from "../firebase";
-import { ref, onValue, remove } from "firebase/database";
+import { ref, onValue } from "firebase/database";
 import { signInAnonymously, signOut } from "firebase/auth";
 import { uploadMedia, deleteMedia, isGithubConfigured } from "../services/githubApi";
 
@@ -570,14 +570,6 @@ function SecRSVP() {
     URL.revokeObjectURL(url);
   };
 
-  const clearAll = async () => {
-    if (!window.confirm("Eliminare tutte le risposte RSVP?\n\nQuesta azione è irreversibile e cancella anche i dati su Firebase.")) return;
-    localStorage.removeItem("rsvp_risposte");
-    setRisposte([]);
-    if (CONFIGURED) {
-      try { await remove(ref(db, "rsvpResponses")); } catch (e) { console.error("Errore eliminazione Firebase:", e); }
-    }
-  };
 
   const TABLE_COLS = ["Nome","Cognome","Presenza","Allergie/Dieta","Note Menu","Messaggio","Aggiunto da","Data"];
 
@@ -596,7 +588,6 @@ function SecRSVP() {
       <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
         <button onClick={exportCSV} style={btn("primary")}>⬇ Esporta CSV</button>
         <button onClick={refresh}   style={btn("outline")}>↻ Aggiorna</button>
-        {risposte.length > 0 && <button onClick={clearAll} style={btn("danger")}>🗑 Svuota</button>}
       </div>
       {/* Table */}
       {risposte.length === 0
