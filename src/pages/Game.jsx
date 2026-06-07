@@ -719,6 +719,11 @@ export default function Game() {
   const [showEnd,    setShowEnd]    = useState(false);
   const [canvasScale, setCanvasScale] = useState(1);
 
+  // Offscreen sprite caches — built once, reused every frame
+  const skyCache   = useRef(null);
+  const treeCache  = useRef([]);   // indexed by tree type 0/1/2
+  const cloudCache = useRef([]);   // indexed by CLOUDS order
+
   // Load face images
   useEffect(() => {
     if (siteData.groom_face_url) {
@@ -732,6 +737,40 @@ export default function Game() {
       brideImg.current = img;
     }
   }, [siteData.groom_face_url, siteData.bride_face_url]);
+
+  // Pre-render static sprites to offscreen canvases (runs once on mount)
+  useEffect(() => {
+    // ── Sky ─────────────────────────────────────────────────────
+    const skyOC = document.createElement("canvas");
+    skyOC.width = CANVAS_W; skyOC.height = CANVAS_H;
+    drawSky(skyOC.getContext("2d"));
+    skyCache.current = skyOC;
+
+    // ── Trees (3 types) ─────────────────────────────────────────
+    // w/h = canvas size, dx = horizontal center, dy = ground y inside canvas
+    const treeSpecs = [
+      { fn: drawCypress, w: 32,  h: 162, dx: 15, dy: 157 }, // type 0
+      { fn: drawOak,     w: 76,  h: 108, dx: 36, dy: 102 }, // type 1
+      { fn: drawOlive,   w: 54,  h: 76,  dx: 26, dy: 72  }, // type 2
+    ];
+    treeCache.current = treeSpecs.map(({ fn, w, h, dx, dy }) => {
+      const oc = document.createElement("canvas");
+      oc.width = w; oc.height = h;
+      fn(oc.getContext("2d"), dx, dy);
+      return { canvas: oc, dx, h };
+    });
+
+    // ── Clouds (one sprite per cloud) ───────────────────────────
+    cloudCache.current = CLOUDS.map(c => {
+      const px = Math.ceil(c.w * 0.29) + 2; // horizontal bleed
+      const py = Math.ceil(c.h * 0.12) + 2; // vertical bleed
+      const oc = document.createElement("canvas");
+      oc.width  = c.w + px * 2;
+      oc.height = c.h + py * 2;
+      drawCloud(oc.getContext("2d"), px, py, c.w, c.h);
+      return { canvas: oc, px, py };
+    });
+  }, []);
 
   // Responsive scale
   useEffect(() => {
@@ -947,18 +986,30 @@ export default function Game() {
     const p    = s.player;
     const days = daysUntil();
 
-    drawSky(ctx);
+    // Sky — single drawImage instead of gradient + fillRect every frame
+    if (skyCache.current) ctx.drawImage(skyCache.current, 0, 0);
+    else drawSky(ctx);
 
-    // Clouds – parallax 0.3
-    CLOUDS.forEach(c => drawCloud(ctx, c.x - cx * 0.3, c.y, c.w, c.h));
+    // Clouds – parallax 0.3, sprite cache + culling
+    CLOUDS.forEach((c, ci) => {
+      const sx = c.x - cx * 0.3;
+      if (sx + c.w < -20 || sx > CANVAS_W + 20) return;
+      const spr = cloudCache.current[ci];
+      if (spr) ctx.drawImage(spr.canvas, sx - spr.px, c.y - spr.py);
+      else      drawCloud(ctx, sx, c.y, c.w, c.h);
+    });
 
-    // Trees – parallax 0.65, ancorati al suolo (gy=360)
+    // Trees – parallax 0.65, sprite cache
     TREES.forEach(({ x: tx, t }) => {
       const sx = tx - cx * 0.65;
-      if (sx < -80 || sx > CANVAS_W + 80) return; // culling
-      if (t === 0) drawCypress(ctx, sx, 360);
-      else if (t === 1) drawOak(ctx, sx, 360);
-      else              drawOlive(ctx, sx, 360);
+      if (sx < -80 || sx > CANVAS_W + 80) return;
+      const spr = treeCache.current[t];
+      if (spr) ctx.drawImage(spr.canvas, Math.round(sx - spr.dx), Math.round(360 - spr.h));
+      else {
+        if (t === 0) drawCypress(ctx, sx, 360);
+        else if (t === 1) drawOak(ctx, sx, 360);
+        else              drawOlive(ctx, sx, 360);
+      }
     });
 
     // Platforms & terrain
@@ -970,8 +1021,11 @@ export default function Game() {
         : drawPlatform(ctx, sx, pl.y, pl.w, pl.h);
     }
 
-    // Castle
-    drawCastle(ctx, 3580 - cx, 360);
+    // Castle — culling: only draw when visible on screen
+    const castleSX = 3580 - cx;
+    if (castleSX < CANVAS_W + 10 && castleSX + 260 > -10) {
+      drawCastle(ctx, castleSX, 360);
+    }
 
     // Checkpoint flag
     drawFlag(ctx, 2000 - cx, 360, s.checkpointPassed);
@@ -1081,12 +1135,16 @@ export default function Game() {
     window.addEventListener("keydown", onKeyDown);
     window.addEventListener("keyup",   onKeyUp);
 
-    const loop = () => {
+    let lastTs = 0;
+    const loop = (ts) => {
+      rafRef.current = requestAnimationFrame(loop);
+      // Cap a 60 fps: salta il frame se è troppo presto (evita sprechi su schermi 90/120 Hz)
+      if (ts - lastTs < 15.5) return;
+      lastTs = ts;
       if (stateRef.current) {
         update(stateRef.current);
         render(ctx, stateRef.current);
       }
-      rafRef.current = requestAnimationFrame(loop);
     };
     rafRef.current = requestAnimationFrame(loop);
 
