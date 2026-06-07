@@ -348,14 +348,14 @@ export default function RSVP() {
 
     if (webhookUrl) {
       try {
-        await Promise.all(rows.map(row =>
-          fetch(webhookUrl, {
+        for (const row of rows) {
+          await fetch(webhookUrl, {
             method:  "POST",
             mode:    "no-cors",
             headers: { "Content-Type": "text/plain;charset=utf-8" },
             body:    JSON.stringify(row),
-          })
-        ));
+          });
+        }
       } catch {
         if (!localSavedRef.current) {
           try {
@@ -376,7 +376,9 @@ export default function RSVP() {
     /* ── Salva su Firebase e localStorage (una voce per riga) ── */
     if (CONFIGURED) {
       try {
-        await Promise.all(rows.map(row => push(ref(db, "rsvpResponses"), row)));
+        for (const row of rows) {
+          await push(ref(db, "rsvpResponses"), row);
+        }
       } catch {}
     }
     try {
