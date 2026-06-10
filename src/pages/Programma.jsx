@@ -245,7 +245,7 @@ export default function Programma() {
           Il Programma
         </h1>
         <p style={{ fontFamily: FONTS.body, fontStyle: "italic", fontSize: 18, color: C.rose, letterSpacing: ".08em" }}>
-          Sabato 2 Ottobre 2026
+          Venerdì 2 Ottobre 2026
         </p>
         <div style={{ display: "flex", alignItems: "center", gap: 14, justifyContent: "center", marginTop: 22 }}>
           <div style={{ height: 1, width: 54, background: C.gold, opacity: .45 }} />
