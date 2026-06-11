@@ -213,12 +213,12 @@ export default function Programma() {
           .prog-right-col { padding-left: 20px; }
           .prog-mobile-only { display: block !important; }
           .prog-vine-deco { display: none !important; }
-          /* Vine su mobile: tronco (57.85% = 372/643px) centrato sui pallini (left=44px) */
+          /* Vine su mobile: tronco (57.93% = 372.5/643px) centrato sui pallini (left=44px) */
           .prog-vine-img {
             display: block !important;
             left: 44px !important;
-            transform: translateX(-57.85%) !important;
-            height: 82% !important;
+            transform: translateX(-57.93%) !important;
+            height: calc(100% + 40px) !important;
             top: -80px !important;
           }
         }
@@ -269,8 +269,8 @@ export default function Programma() {
                 className="prog-vine-img"
                 style={{
                   position: "absolute", top: "-110px", left: "50%",
-                  transform: "translateX(calc(-50% - 81px))",
-                  height: "88%", width: "auto", objectFit: "contain",
+                  transform: "translateX(-57.93%)",
+                  height: "calc(100% + 40px)", width: "auto", objectFit: "contain",
                   zIndex: 0, pointerEvents: "none",
                 }}
                 onError={vineLineCustomUrl ? undefined : () => setVineLineBaseErr(true)}
