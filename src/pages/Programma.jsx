@@ -385,7 +385,7 @@ export default function Programma() {
                       e.currentTarget.style.boxShadow = "0 8px 32px rgba(0,0,0,.11), 0 2px 8px rgba(0,0,0,.07)";
                     }}
                   >
-                    <img src={polaroidImgUrl} alt="" style={{ width: "100%", height: 220, objectFit: "cover", display: "block", borderRadius: 1 }} />
+                    <img src={polaroidImgUrl} alt="" style={{ width: "100%", height: 300, objectFit: "cover", display: "block", borderRadius: 1 }} />
                     <p style={{ textAlign: "center", marginTop: 10, fontFamily: FONTS.script, fontSize: 17, color: C.dark, opacity: .52 }}>
                       📷 Momento speciale
                     </p>
