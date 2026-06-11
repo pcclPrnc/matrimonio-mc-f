@@ -228,7 +228,8 @@ export default function Programma() {
       {gp.heroImg?.vis !== false && heroImgUrl && (
       <div style={{ padding: "80px 20px 0" }}>
         <div style={{
-          width: "100%", height: 224, maxWidth: 900, margin: "0 auto",
+          width: "100%", maxWidth: 480, margin: "0 auto",
+          aspectRatio: "1 / 1",
           borderRadius: 12, overflow: "hidden", position: "relative",
         }}>
           <img src={heroImgUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
@@ -385,7 +386,7 @@ export default function Programma() {
                       e.currentTarget.style.boxShadow = "0 8px 32px rgba(0,0,0,.11), 0 2px 8px rgba(0,0,0,.07)";
                     }}
                   >
-                    <img src={polaroidImgUrl} alt="" style={{ width: "100%", height: 300, objectFit: "cover", display: "block", borderRadius: 1 }} />
+                    <img src={polaroidImgUrl} alt="" style={{ width: "100%", height: 220, objectFit: "cover", display: "block", borderRadius: 1 }} />
                     <p style={{ textAlign: "center", marginTop: 10, fontFamily: FONTS.script, fontSize: 17, color: C.dark, opacity: .52 }}>
                       📷 Momento speciale
                     </p>
