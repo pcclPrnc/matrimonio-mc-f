@@ -125,7 +125,7 @@ function CirclePhoto({ up, C }) {
   return (
     <div style={{ display: "flex", justifyContent: "center", marginBottom: 36 }}>
       <div style={{
-        width: 180, height: 180, borderRadius: "50%", flexShrink: 0,
+        width: 234, height: 234, borderRadius: "50%", flexShrink: 0,
         overflow: "hidden", position: "relative",
       }}>
         <img src={up.url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
