@@ -5,7 +5,7 @@ import {
 import { useSite } from "../context/SiteContext";
 import { SITE_DEFAULTS } from "../context/SiteContext";
 import { db, auth, CONFIGURED } from "../firebase";
-import { ref, onValue } from "firebase/database";
+import { ref, onValue, remove } from "firebase/database";
 import { signInAnonymously, signOut } from "firebase/auth";
 import { uploadMedia, deleteMedia, isGithubConfigured } from "../services/githubApi";
 
@@ -516,21 +516,34 @@ function SecFAQ({ siteData, updateSite }) {
    SECTION 4 — RISPOSTE RSVP
    ═══════════════════════════════════════════════════════════ */
 function SecRSVP() {
-  const [risposte, setRisposte] = useState(() => {
+  const [risposte,  setRisposte]  = useState(() => {
     try { return JSON.parse(localStorage.getItem("rsvp_risposte") || "[]"); } catch { return []; }
   });
+  const [clearStep, setClearStep] = useState(0); // 0=idle 1=first confirm 2=deleting
 
   /* Subscribe to Firebase Realtime DB for RSVP responses */
   useEffect(() => {
     if (!CONFIGURED) return;
     const unsubscribe = onValue(ref(db, "rsvpResponses"), snap => {
       const val = snap.val();
-      if (!val) return;
+      if (!val) { setRisposte([]); return; }   // nodo rimosso → lista vuota
       const arr = Object.values(val).sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
       setRisposte(arr);
     });
     return unsubscribe;
   }, []);
+
+  const clearAll = async () => {
+    setClearStep(2);
+    try {
+      if (CONFIGURED) await remove(ref(db, "rsvpResponses"));
+      localStorage.removeItem("rsvp_risposte");
+      setRisposte([]);
+    } catch (err) {
+      console.error("Errore pulizia RSVP:", err);
+    }
+    setClearStep(0);
+  };
 
   const refresh = () => {
     if (!CONFIGURED) {
@@ -585,9 +598,24 @@ function SecRSVP() {
         <ABadge color={A.muted}>⏳ {risposte.length} righe totali</ABadge>
       </div>
       {/* Actions */}
-      <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
+      <div style={{ display: "flex", gap: 8, marginBottom: 20, flexWrap: "wrap", alignItems: "center" }}>
         <button onClick={exportCSV} style={btn("primary")}>⬇ Esporta CSV</button>
         <button onClick={refresh}   style={btn("outline")}>↻ Aggiorna</button>
+
+        {/* Svuota — doppio check inline */}
+        {clearStep === 0 && (
+          <button onClick={() => setClearStep(1)} style={btn("danger", { marginLeft: "auto" })}>🗑 Svuota tutto</button>
+        )}
+        {clearStep === 1 && (
+          <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8, background: A.dangerLight, border: `1px solid ${A.danger}66`, borderRadius: 4, padding: "6px 10px" }}>
+            <span style={{ fontFamily: A.ff, fontSize: 12, color: A.danger, fontWeight: 600 }}>⚠ Eliminare tutte le risposte da Firebase?</span>
+            <button onClick={clearAll}           style={btn("danger")}>Sì, elimina</button>
+            <button onClick={() => setClearStep(0)} style={btn("outline")}>Annulla</button>
+          </div>
+        )}
+        {clearStep === 2 && (
+          <span style={{ marginLeft: "auto", fontFamily: A.ff, fontSize: 12, color: A.muted }}>Eliminazione in corso…</span>
+        )}
       </div>
       {/* Table */}
       {risposte.length === 0
