@@ -720,9 +720,12 @@ export default function Game() {
   const [canvasScale, setCanvasScale] = useState(1);
 
   // Offscreen sprite caches — built once, reused every frame
-  const skyCache   = useRef(null);
-  const treeCache  = useRef([]);   // indexed by tree type 0/1/2
-  const cloudCache = useRef([]);   // indexed by CLOUDS order
+  const skyCache         = useRef(null);
+  const treeCache        = useRef([]);   // indexed by tree type 0/1/2
+  const cloudCache       = useRef([]);   // indexed by CLOUDS order
+  const terrainCache     = useRef(null); // full 4000×400 level terrain + platforms + castle
+  const heartSpriteCache = useRef(null); // 14×12 pixel heart sprite
+  const mushroomCache    = useRef(null); // { angry:[frame0,frame1], calm:[frame0,frame1] }
 
   // Load face images
   useEffect(() => {
@@ -770,6 +773,43 @@ export default function Game() {
       drawCloud(oc.getContext("2d"), px, py, c.w, c.h);
       return { canvas: oc, px, py };
     });
+
+    // ── Terrain + platforms + castle (LEVEL_W × CANVAS_H) ────────
+    // Bakes all static geometry into one wide offscreen canvas so the
+    // render loop does 1 drawImage instead of 50+ fillRect calls per frame.
+    // "Air" pixels stay transparent, compositing correctly over sky/trees.
+    const terrOC = document.createElement("canvas");
+    terrOC.width  = LEVEL_W;
+    terrOC.height = CANVAS_H;
+    const tctx = terrOC.getContext("2d");
+    for (const pl of PLATFORMS) {
+      if (pl.tipo === "terreno") drawTerrain(tctx, pl.x, pl.y, pl.w, pl.h);
+      else                       drawPlatform(tctx, pl.x, pl.y, pl.w, pl.h);
+    }
+    drawCastle(tctx, 3580, 360);
+    terrainCache.current = terrOC;
+
+    // ── Pixel heart sprite (14 × 12) ─────────────────────────────
+    // 27 fillRect per heart → 1 drawImage. With 12 hearts in the level
+    // this alone saves ~324 fillRect calls per frame.
+    const hOC = document.createElement("canvas");
+    hOC.width = 14; hOC.height = 12;
+    drawPixelHeart(hOC.getContext("2d"), 0, 0, 2, "#C9A84C");
+    heartSpriteCache.current = hOC;
+
+    // ── Mushroom sprites (4 variants: angry/calm × frame 0/1) ─────
+    // ~15 fillRect+save/restore per enemy → 1 drawImage.
+    // Draw at (x=0, y=4) so the hat-top lands at canvas-y=0 (gy-20=0).
+    const mkMush = (calm, tick) => {
+      const oc = document.createElement("canvas");
+      oc.width = 18; oc.height = 22;
+      drawMushroom(oc.getContext("2d"), 0, 4, calm, tick);
+      return oc;
+    };
+    mushroomCache.current = {
+      angry: [mkMush(false, 0), mkMush(false, 8)],
+      calm:  [mkMush(true,  0), mkMush(true,  8)],
+    };
   }, []);
 
   // Responsive scale
@@ -1012,34 +1052,50 @@ export default function Game() {
       }
     });
 
-    // Platforms & terrain
-    for (const pl of PLATFORMS) {
-      const sx = pl.x - cx;
-      if (sx + pl.w < -10 || sx > CANVAS_W + 10) continue;
-      pl.tipo === "terreno"
-        ? drawTerrain(ctx, sx, pl.y, pl.w, pl.h)
-        : drawPlatform(ctx, sx, pl.y, pl.w, pl.h);
-    }
-
-    // Castle — culling: only draw when visible on screen
-    const castleSX = 3580 - cx;
-    if (castleSX < CANVAS_W + 10 && castleSX + 260 > -10) {
-      drawCastle(ctx, castleSX, 360);
+    // Terrain + platforms + castle — single drawImage from pre-rendered level canvas.
+    // Transparent "air" pixels composite correctly over sky/trees already drawn.
+    if (terrainCache.current) {
+      ctx.drawImage(terrainCache.current,
+        Math.round(cx), 0, CANVAS_W, CANVAS_H,
+        0, 0, CANVAS_W, CANVAS_H);
+    } else {
+      for (const pl of PLATFORMS) {
+        const sx = pl.x - cx;
+        if (sx + pl.w < -10 || sx > CANVAS_W + 10) continue;
+        pl.tipo === "terreno"
+          ? drawTerrain(ctx, sx, pl.y, pl.w, pl.h)
+          : drawPlatform(ctx, sx, pl.y, pl.w, pl.h);
+      }
+      const castleSX = 3580 - cx;
+      if (castleSX < CANVAS_W + 10 && castleSX + 260 > -10) {
+        drawCastle(ctx, castleSX, 360);
+      }
     }
 
     // Checkpoint flag
     drawFlag(ctx, 2000 - cx, 360, s.checkpointPassed);
 
-    // Collectible hearts (floating)
+    // Collectible hearts (floating) — sprite cache (saves 27 fillRect × N hearts per frame)
+    const heartSpr = heartSpriteCache.current;
     s.hearts.forEach(h => {
       if (!h.collected) {
         const fy = h.y + Math.sin(s.tick * 0.055 + h.x * 0.01) * 4;
-        drawPixelHeart(ctx, h.x - cx - 5, fy - 6, 2, "#C9A84C");
+        if (heartSpr) ctx.drawImage(heartSpr, Math.round(h.x - cx - 5), Math.round(fy - 6));
+        else          drawPixelHeart(ctx, h.x - cx - 5, fy - 6, 2, "#C9A84C");
       }
     });
 
-    // Enemies
-    s.enemies.forEach(e => drawMushroom(ctx, e.x - cx, e.y, e.calm, s.tick));
+    // Enemies — sprite cache + off-screen culling
+    // sprite drawn at (0,4) in offscreen canvas, so blit at (sx, e.y-4)
+    const mushCache = mushroomCache.current;
+    const mframe = Math.floor(s.tick / 8) % 2;
+    s.enemies.forEach(e => {
+      const sx = e.x - cx;
+      if (sx + 18 < -10 || sx > CANVAS_W + 10) return;
+      const spr = mushCache?.[e.calm ? "calm" : "angry"]?.[mframe];
+      if (spr) ctx.drawImage(spr, Math.round(sx), Math.round(e.y - 4));
+      else     drawMushroom(ctx, sx, e.y, e.calm, s.tick);
+    });
 
     // Bride — visibile solo dopo che lo sposo raggiunge l'ultimo albero
     if (s.bride.visible && !s.bride.gone) {
@@ -1072,7 +1128,8 @@ export default function Game() {
     // ── HUD bar
     ctx.fillStyle = "rgba(0,0,0,0.38)";
     ctx.fillRect(5, 5, 232, 26);
-    drawPixelHeart(ctx, 12, 10, 2, "#C9A84C");
+    if (heartSpr) ctx.drawImage(heartSpr, 12, 10);
+    else          drawPixelHeart(ctx, 12, 10, 2, "#C9A84C");
     ctx.font = "bold 12px 'Courier New', monospace";
     ctx.fillStyle = "#FFD700";
     ctx.textAlign = "left";
