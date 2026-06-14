@@ -224,7 +224,7 @@ export default function Home() {
               <div style={{ fontFamily: FONTS.body, fontSize: 15, lineHeight: 1.8, color: C.dark }}>
                 <strong style={{ fontWeight: 400, color: C.olive }}>{siteData.luogoRicevimento}</strong><br />
                 <span style={{ fontSize: 13, opacity: .55 }}>{siteData.indirizzoRicevimento}</span><br />
-                <span style={{ fontFamily: FONTS.serif, fontStyle: "italic", color: C.olive, fontSize: 16 }}>A seguire la cerimonia</span>
+                <span style={{ fontFamily: FONTS.serif, fontStyle: "italic", color: C.olive, fontSize: 16 }}>Dopo la cerimonia</span>
               </div>
               <a href={siteData.mapsRicevimento} target="_blank" rel="noopener noreferrer" className="wc-nl"
                 style={{ fontFamily: FONTS.body, fontSize: 11, letterSpacing: ".16em", textTransform: "uppercase", color: C.olive, textDecoration: "none", borderBottom: `1px solid ${C.olive}44`, paddingBottom: 2 }}>
