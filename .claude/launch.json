@@ -3,8 +3,8 @@
   "configurations": [
     {
       "name": "bride-preview",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": ["serve", "-p", "5747", "--no-clipboard", "."],
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--", "--port", "5747"],
       "port": 5747
     }
   ]

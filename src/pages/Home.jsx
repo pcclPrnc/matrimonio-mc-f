@@ -156,7 +156,7 @@ export default function Home() {
             </div>
           )}
 
-          <a href="#info" className="wc-cta a3"
+          <a href="#rsvp-card" className="wc-cta a3"
             style={{ fontFamily: FONTS.body, fontSize: 14, letterSpacing: ".18em", textTransform: "uppercase", color: C.olive, border: `1.2px solid ${C.olive}`, padding: "12px 34px", borderRadius: 2, textDecoration: "none", display: "inline-block", background: "transparent" }}>
             Conferma la tua presenza →
           </a>
@@ -233,7 +233,7 @@ export default function Home() {
             </div>
 
             {/* Card RSVP */}
-            <div className="wc-card" style={{ background: C.card, border: `1px solid ${C.olive}1A`, borderRadius: 10, padding: "38px 24px", display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: 13, boxShadow: "0 4px 18px rgba(0,0,0,.05)" }}>
+            <div id="rsvp-card" className="wc-card" style={{ background: C.card, border: `1px solid ${C.olive}1A`, borderRadius: 10, padding: "38px 24px", display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: 13, boxShadow: "0 4px 18px rgba(0,0,0,.05)" }}>
               <PhotoSlot up={gfx("rsvpCard")} vis={g.rsvpCard?.vis !== false} edit={false} size={105} base={homeBase("rsvpCard")} svg={<HeartSVG color={C.olive} />} />
               <h3 style={{ fontFamily: FONTS.serif, fontSize: 20, color: C.olive, fontWeight: 400, fontStyle: "italic" }}>RSVP</h3>
               <div style={{ height: 1, width: 38, background: C.gold, opacity: .5 }} />
