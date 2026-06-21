@@ -157,6 +157,10 @@ export default function Home() {
           )}
 
           <a href="#rsvp-card" className="wc-cta a3"
+            onClick={(e) => {
+              e.preventDefault();
+              document.getElementById("rsvp-card")?.scrollIntoView({ behavior: "smooth", block: "center" });
+            }}
             style={{ fontFamily: FONTS.body, fontSize: 14, letterSpacing: ".18em", textTransform: "uppercase", color: C.olive, border: `1.2px solid ${C.olive}`, padding: "12px 34px", borderRadius: 2, textDecoration: "none", display: "inline-block", background: "transparent" }}>
             Conferma la tua presenza →
           </a>
